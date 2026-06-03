@@ -1,0 +1,246 @@
+@import "tailwindcss";
+
+/*
+  Substrate design tokens. Declared once here so JS can read the exact same
+  hex via getComputedStyle (see lib/cssvar.ts), which keeps the future WebGL
+  hero and the SSR fallback on one palette with zero drift.
+  Locked dark theme. One accent (amber). Drafting blue is contained to the
+  grid layer only and is never used as a UI accent.
+*/
+@theme {
+  --color-void: #0b0d10;
+  --color-vellum: #ece7dd;
+  --color-graphite: #7e848f;
+  --color-hairline: #2a2e34;
+  --color-accent: #ff6a1a;
+  --color-drafting: #3a5a78;
+
+  --font-display: var(--font-archivo-expanded), "Arial Black", system-ui, sans-serif;
+  --font-serif: var(--font-spectral), Georgia, "Times New Roman", serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", monospace;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    background-color: var(--color-void);
+    color: var(--color-vellum);
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-void);
+    color: var(--color-vellum);
+    font-family: var(--font-serif);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    min-height: 100dvh;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-void);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 1px;
+  }
+
+  /* Tabular figures for all metrics and mono numerals. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Push the variable Archivo to its expanded width wherever the display
+     face is used. Weight is still controlled by the font-weight utilities. */
+  .font-display {
+    font-variation-settings: "wdth" 125;
+  }
+}
+
+/* Honor reduced motion globally. Phase 2 ships no motion, but this guard
+   stays so later phases inherit it for free. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Windows High Contrast / forced-colors: let the system own colors,
+   keep focus obviously visible. */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid CanvasText;
+  }
+}
+
+/* When the WebGL hero is active (decided pre-paint by an inline script in the
+   document, confirmed by React), hide the SSR static layout and reserve the
+   hero scroll track. This prevents a flash of the static hero on first paint
+   and prevents the hero from collapsing before the scene mounts. */
+html[data-hero="webgl"] .hero-static {
+  display: none;
+}
+html[data-hero="webgl"] #hero {
+  min-height: 500dvh;
+}
+
+/* The scene fades in instead of popping once its chunk loads. */
+@keyframes hero-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.hero-webgl {
+  animation: hero-fade-in 500ms var(--ease-out) both;
+}
+
+/* Motion design tokens (Emil: the built-in easings are too weak). */
+@layer base {
+  :root {
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+}
+
+@layer components {
+  /* Pressable feedback for primary actions. */
+  .cta {
+    transition:
+      transform 160ms var(--ease-out),
+      opacity 160ms var(--ease-out);
+    will-change: transform;
+  }
+  .cta:active {
+    transform: scale(0.97);
+  }
+
+  /* Work index card. Hover lift gated to real pointers only. */
+  .work-card {
+    transition: transform 220ms var(--ease-out);
+  }
+  .work-card__rule {
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 260ms var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .work-card:hover {
+      transform: translateY(-6px);
+      border-color: var(--color-graphite);
+    }
+    .work-card:hover .work-card__rule {
+      transform: scaleX(1);
+    }
+  }
+
+  /* Sticky scroll-reveal statement. The tall track + sticky inner are added
+     by JS only when motion is allowed; the default is a normal short section
+     (no dead scroll) for reduced-motion and no-JS.
+
+     Reveal-from-behind: the statement is pulled up under the hero's last
+     screen (negative margin) and sits one layer below it (z-index). Because
+     the hero is opaque and stacks above, the pinned statement stays hidden
+     until the hero scrolls up and uncovers it, so the text appears to emerge
+     from behind the hero. The first 100vh of the track is this reveal; the
+     rest drives the word-by-word brighten. */
+  .statement.is-sticky {
+    position: relative;
+    z-index: 1;
+    height: 300vh;
+    margin-top: -100vh;
+  }
+  .statement.is-sticky .statement__inner {
+    position: sticky;
+    top: 0;
+    display: flex;
+    min-height: 100dvh;
+    align-items: center;
+  }
+  /* Opaque, raised hero so it masks the statement tucked behind it. Stays
+     well below the fixed nav (z-40). Only matters when the statement runs its
+     sticky reveal; harmless otherwise since the page is already void. */
+  #hero {
+    position: relative;
+    z-index: 2;
+    background-color: var(--color-void);
+  }
+
+  /* Hero state rail. The active state (driven by scroll progress) and any
+     hovered/focused state extend their tick and turn amber. */
+  .hero-rail__btn {
+    color: var(--color-graphite);
+    transition: color 220ms var(--ease-out);
+  }
+  .hero-rail__tick {
+    display: inline-block;
+    height: 1px;
+    width: 28px;
+    transform: scaleX(0.43);
+    transform-origin: left center;
+    background-color: var(--color-hairline);
+    transition:
+      transform 220ms var(--ease-out),
+      background-color 220ms var(--ease-out);
+  }
+  .hero-rail__btn[data-active="true"] {
+    color: var(--color-vellum);
+  }
+  .hero-rail__btn[data-active="true"] .hero-rail__tick {
+    transform: scaleX(1);
+    background-color: var(--color-accent);
+  }
+  .hero-rail__btn:focus-visible {
+    color: var(--color-vellum);
+  }
+  .hero-rail__btn:focus-visible .hero-rail__tick {
+    transform: scaleX(1);
+    background-color: var(--color-accent);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .hero-rail__btn:hover {
+      color: var(--color-vellum);
+    }
+    .hero-rail__btn:hover .hero-rail__tick {
+      transform: scaleX(1);
+      background-color: var(--color-accent);
+    }
+  }
+}
+
+/* Premium page transitions (next-view-transitions). Disabled under reduced
+   motion, where navigation becomes an instant cut. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 320ms;
+  animation-timing-function: var(--ease-in-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
