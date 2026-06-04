@@ -1,60 +1,42 @@
-"use client";
-
-import { useRef } from "react";
-import {
-  motion,
-  useMotionValue,
-  useSpring,
-  useReducedMotion,
-} from "motion/react";
+import { ArrowRight } from "lucide-react";
 
 /*
-  A magnetic link/button: the element eases toward the cursor with spring
-  physics, then settles back. Decorative, so it is fully gated. Mouse events
-  only fire on real pointers, and reduced-motion disables the pull entirely.
-  The spring (not a raw mouse->transform map) is what makes it feel alive
-  rather than mechanical.
+  Primary CTA. A periodic light glint (see .cta-sheen in globals.css) and an
+  arrow that slides right on hover. Press feedback comes from the shared .cta
+  class on the caller. No cursor-following (magnetic) behavior.
 */
 export function MagneticButton({
   href,
   children,
   className,
-  strength = 0.3,
 }: {
   href: string;
   children: React.ReactNode;
   className?: string;
-  strength?: number;
 }) {
-  const ref = useRef<HTMLAnchorElement>(null);
-  const reduce = useReducedMotion();
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const x = useSpring(mx, { stiffness: 150, damping: 15, mass: 0.1 });
-  const y = useSpring(my, { stiffness: 150, damping: 15, mass: 0.1 });
-
-  const onMove = (e: React.MouseEvent) => {
-    if (reduce || !ref.current) return;
-    const r = ref.current.getBoundingClientRect();
-    mx.set((e.clientX - (r.left + r.width / 2)) * strength);
-    my.set((e.clientY - (r.top + r.height / 2)) * strength);
-  };
-  const reset = () => {
-    mx.set(0);
-    my.set(0);
-  };
-
   return (
-    <motion.a
-      ref={ref}
+    <a
       href={href}
-      onMouseMove={onMove}
-      onMouseLeave={reset}
-      whileTap={{ scale: 0.97 }}
-      style={{ x, y }}
-      className={className}
+      className={`group relative overflow-hidden ${className ?? ""}`}
     >
-      {children}
-    </motion.a>
+      {/* periodic light glint */}
+      <span aria-hidden className="cta-sheen pointer-events-none absolute inset-0" />
+      <span className="relative z-[1] inline-flex items-center gap-2">
+        <span className="nav-flip">
+          <span className="nav-flip__inner">
+            <span className="nav-flip__face nav-flip__face--front">{children}</span>
+            <span aria-hidden className="nav-flip__face nav-flip__face--back">
+              {children}
+            </span>
+          </span>
+        </span>
+        <ArrowRight
+          aria-hidden
+          size={16}
+          strokeWidth={2.25}
+          className="transition-transform duration-200 ease-out group-hover:translate-x-1"
+        />
+      </span>
+    </a>
   );
 }

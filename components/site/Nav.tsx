@@ -24,9 +24,16 @@ export function Nav() {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="transition-colors duration-200 hover:text-vellum"
+                className="nav-flip transition-colors duration-200 hover:text-vellum"
               >
-                {item.label}
+                <span className="nav-flip__inner">
+                  <span className="nav-flip__face nav-flip__face--front">
+                    {item.label}
+                  </span>
+                  <span aria-hidden className="nav-flip__face nav-flip__face--back">
+                    {item.label}
+                  </span>
+                </span>
               </Link>
             </li>
           ))}

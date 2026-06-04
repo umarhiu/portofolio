@@ -1,12 +1,11 @@
 import { heroStates } from "@/lib/content";
-import { LayerArt } from "@/components/hero/LayerArt";
 
 /*
-  The SSR, no-motion hero: five stacked full-height states with byte-identical
-  copy. This is the first paint and LCP source, and it is the reduced-motion
-  and no-WebGL fallback. When a capable desktop activates the WebGL scene, the
-  enhancer hides this subtree (it then contributes no height; the scene
-  provides its own scroll track).
+  The SSR, no-motion hero: five stacked full-height text states with
+  byte-identical copy. This is the first paint and LCP source, and the
+  reduced-motion fallback. When a capable client activates the scroll hero,
+  the enhancer hides this subtree (it then contributes no height; the scroll
+  hero provides its own track).
 */
 
 const railLabels = heroStates.map((s) => s.index);
@@ -43,8 +42,8 @@ export function HeroStatic() {
             id={`state-${state.index}`}
             className="flex min-h-[100dvh] items-center px-4 pt-24 pb-16 sm:px-8 lg:px-20"
           >
-            <div className="mx-auto grid w-full max-w-[1400px] items-center gap-10 lg:grid-cols-2 lg:gap-16">
-              <div className="order-2 lg:order-1">
+            <div className="mx-auto w-full max-w-[1400px]">
+              <div>
                 {state.eyebrow ? (
                   <div className="mb-5 font-mono text-xs uppercase tracking-[0.18em] text-graphite">
                     {state.eyebrow}
@@ -93,12 +92,6 @@ export function HeroStatic() {
                     {state.cta.label}
                   </a>
                 ) : null}
-              </div>
-
-              <div className="order-1 lg:order-2">
-                <div className="aspect-[16/10] w-full">
-                  <LayerArt kind={state.layer} className="h-full w-full" />
-                </div>
               </div>
             </div>
           </div>

@@ -62,10 +62,11 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Push the variable Archivo to its expanded width wherever the display
-     face is used. Weight is still controlled by the font-weight utilities. */
+  /* Push the variable Archivo wider wherever the display face is used (115,
+     not max 125, so long multi-word headlines do not over-stretch and ladder).
+     Weight is still controlled by the font-weight utilities. */
   .font-display {
-    font-variation-settings: "wdth" 125;
+    font-variation-settings: "wdth" 115;
   }
 }
 
@@ -116,6 +117,17 @@ html[data-hero="webgl"] #hero {
   animation: hero-fade-in 500ms var(--ease-out) both;
 }
 
+@keyframes cta-glint {
+  0%,
+  10% {
+    transform: translateX(-160%) skewX(-12deg);
+  }
+  30%,
+  100% {
+    transform: translateX(360%) skewX(-12deg);
+  }
+}
+
 /* Motion design tokens (Emil: the built-in easings are too weak). */
 @layer base {
   :root {
@@ -128,13 +140,51 @@ html[data-hero="webgl"] #hero {
 @layer components {
   /* Pressable feedback for primary actions. */
   .cta {
+    /* Overshoot easing gives the hover scale a subtle bounce. */
     transition:
-      transform 160ms var(--ease-out),
+      transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1),
       opacity 160ms var(--ease-out);
     will-change: transform;
   }
+  @media (hover: hover) and (pointer: fine) {
+    .cta:hover {
+      transform: scale(1.05);
+    }
+  }
+  /* Declared after :hover so a press wins over hover. */
   .cta:active {
     transform: scale(0.97);
+  }
+
+  /* CTA label does the same 3D roll as the nav, triggered by the whole button. */
+  @media (hover: hover) and (pointer: fine) {
+    .cta:hover .nav-flip__inner {
+      transform: rotateX(90deg);
+    }
+  }
+  .cta:focus-visible .nav-flip__inner {
+    transform: rotateX(90deg);
+  }
+
+  /* A warm-white light glint that sweeps across primary CTAs every few
+     seconds, then settles. Disabled under reduced motion (global block). */
+  .cta-sheen {
+    overflow: hidden;
+  }
+  .cta-sheen::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 45%;
+    background: linear-gradient(
+      105deg,
+      transparent 0%,
+      rgba(236, 231, 221, 0.5) 50%,
+      transparent 100%
+    );
+    transform: translateX(-160%) skewX(-12deg);
+    will-change: transform;
+    animation: cta-glint 6s ease-in-out 1.2s infinite;
   }
 
   /* Work index card. Hover lift gated to real pointers only. */
@@ -186,6 +236,41 @@ html[data-hero="webgl"] #hero {
     position: relative;
     z-index: 2;
     background-color: var(--color-void);
+  }
+
+  /* Navbar 3D roll: on hover/focus the label flips on the X axis and a
+     duplicate rolls into place, like a cube edge turning. */
+  .nav-flip {
+    display: inline-block;
+    overflow: hidden;
+    perspective: 400px;
+  }
+  .nav-flip__inner {
+    position: relative;
+    display: inline-block;
+    line-height: 1;
+    transform-style: preserve-3d;
+    transition: transform 0.45s cubic-bezier(0.76, 0, 0.24, 1);
+  }
+  .nav-flip__face {
+    display: block;
+    white-space: nowrap;
+  }
+  .nav-flip__face--front {
+    transform: translateZ(0.5em);
+  }
+  .nav-flip__face--back {
+    position: absolute;
+    inset: 0;
+    transform: rotateX(-90deg) translateZ(0.5em);
+  }
+  .nav-flip:focus-visible .nav-flip__inner {
+    transform: rotateX(90deg);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .nav-flip:hover .nav-flip__inner {
+      transform: rotateX(90deg);
+    }
   }
 
   /* Hero state rail. The active state (driven by scroll progress) and any
