@@ -93,6 +93,12 @@ export function Positioning() {
   const revealY = useTransform(smooth, [0.06, 0.34], [28, 0]);
   const domainOpacity = useTransform(smooth, [WORDS_END, 1], [0, 1]);
 
+  // Laptop visual: scroll-linked parallax + a gentle turn + a scale-in as the
+  // statement reveals. Composed with an idle float on the inner wrapper.
+  const laptopY = useTransform(smooth, [0, 1], [40, -48]);
+  const laptopRotate = useTransform(smooth, [0, 1], [-4, 4]);
+  const laptopScale = useTransform(smooth, [0.04, 0.42], [0.86, 1]);
+
   return (
     <section
       ref={root}
@@ -108,24 +114,50 @@ export function Positioning() {
               ? { opacity: revealOpacity, y: revealY }
               : undefined
           }
-          className="mx-auto w-full max-w-[1400px] will-change-[transform,opacity]"
+          className="mx-auto grid w-full max-w-[1400px] grid-cols-1 items-center gap-10 will-change-[transform,opacity] lg:grid-cols-2 lg:gap-12"
         >
-          <p
-            className="max-w-[20ch] font-display font-bold uppercase leading-[0.98] tracking-tight text-vellum"
-            style={{ fontSize: "clamp(2rem, 4.5vw, 4rem)" }}
+          <div>
+            <p
+              className="max-w-[20ch] font-display font-bold uppercase leading-[0.98] tracking-tight text-vellum"
+              style={{ fontSize: "clamp(2rem, 4.5vw, 4rem)" }}
+            >
+              {words.map((w, i) => (
+                <Word key={`${w}-${i}`} progress={smooth} index={i} active={active}>
+                  {w}
+                </Word>
+              ))}
+            </p>
+            <motion.p
+              style={{ opacity: active ? domainOpacity : 1 }}
+              className="mt-8 font-mono text-xs uppercase tracking-[0.18em] text-graphite"
+            >
+              {site.domains.join("  /  ")}
+            </motion.p>
+          </div>
+
+          {/* Laptop visual: scroll parallax + gentle turn + idle float. */}
+          <motion.div
+            style={
+              active
+                ? { y: laptopY, rotate: laptopRotate, scale: laptopScale }
+                : undefined
+            }
+            className="relative hidden items-center justify-center lg:flex"
           >
-            {words.map((w, i) => (
-              <Word key={`${w}-${i}`} progress={smooth} index={i} active={active}>
-                {w}
-              </Word>
-            ))}
-          </p>
-          <motion.p
-            style={{ opacity: active ? domainOpacity : 1 }}
-            className="mt-8 font-mono text-xs uppercase tracking-[0.18em] text-graphite"
-          >
-            {site.domains.join("  /  ")}
-          </motion.p>
+            <motion.div
+              animate={active ? { y: [0, -12, 0] } : undefined}
+              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/asset/laptop.webp"
+                alt=""
+                aria-hidden="true"
+                className="w-full max-w-[540px] select-none"
+                style={{ filter: "drop-shadow(0 36px 60px rgba(0,0,0,0.55))" }}
+              />
+            </motion.div>
+          </motion.div>
         </motion.div>
       </div>
     </section>

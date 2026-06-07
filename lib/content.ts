@@ -41,7 +41,8 @@ export type HeroPlacement =
   | "top-left"
   | "right"
   | "bottom-wide"
-  | "center";
+  | "center"
+  | "center-bottom";
 
 export interface HeroState {
   index: string; // "01".."05"
@@ -51,6 +52,7 @@ export interface HeroState {
   lead?: string; // small line above the headline (state 02)
   headline: string;
   ghost?: boolean; // render the headline as outline display type
+  invert?: boolean; // light (vellum) surface with dark (void) text
   sub?: string; // supporting line
   spec?: string; // mono spec line (state 04)
   cta?: { label: string; href: string };
@@ -62,7 +64,7 @@ export const heroStates: HeroState[] = [
     layer: "assembled",
     placement: "bottom-left",
     eyebrow: "Product designer for complex software",
-    headline: "I design the system behind the screen.",
+    headline: "I design\nthe system\nbehind the screen.",
   },
   {
     index: "02",
@@ -76,7 +78,7 @@ export const heroStates: HeroState[] = [
   {
     index: "03",
     layer: "data",
-    placement: "right",
+    placement: "center-bottom",
     headline: "A dashboard is only as honest as its data.",
     sub: "I model the source of truth before the first pixel.",
   },
@@ -84,13 +86,14 @@ export const heroStates: HeroState[] = [
     index: "04",
     layer: "components",
     placement: "bottom-wide",
-    headline: "Every state designed. Not just the happy path.",
+    headline: "Every state designed.\nNot just the happy path.",
     spec: "default / hover / loading / error / empty",
   },
   {
     index: "05",
     layer: "reconverge",
     placement: "center",
+    invert: true,
     headline: "Complexity, taken apart so no one else has to.",
     cta: { label: "View the case files", href: "#selected-work" },
   },

@@ -1,14 +1,16 @@
 "use client";
 
-import { Fragment, useCallback, useRef } from "react";
+import { Fragment, useCallback, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { heroStates } from "@/lib/content";
 import { MagneticButton } from "@/components/ui/MagneticButton";
-import { HeroBackground } from "@/components/hero/HeroBackground";
-import { HeroBackgroundFoundation } from "@/components/hero/HeroBackgroundFoundation";
-import { HeroBackgroundData } from "@/components/hero/HeroBackgroundData";
+import { Component as EtherealShadow } from "@/components/ui/etheral-shadow";
+import { Boxes } from "@/components/ui/background-boxes";
+import { HeroBackgroundTokens } from "@/components/hero/HeroBackgroundTokens";
+import { HeroBackgroundFolder } from "@/components/hero/HeroBackgroundFolder";
+import { HeroBackgroundSkills } from "@/components/hero/HeroBackgroundSkills";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -24,8 +26,8 @@ const PLACEMENT: Record<
   { wrap: string; size: string; lead?: string; max?: string }
 > = {
   "bottom-left": {
-    wrap: "absolute bottom-[14vh] left-0 w-full max-w-[900px] text-left",
-    size: "clamp(2.25rem, 5vw, 4.5rem)",
+    wrap: "absolute bottom-[12vh] left-0 w-full text-left",
+    size: "clamp(2.5rem, 6vw, 5.75rem)",
   },
   "top-left": {
     wrap: "absolute top-[19vh] left-0 w-full max-w-[680px] text-left",
@@ -43,20 +45,36 @@ const PLACEMENT: Record<
   },
   center: {
     wrap: "absolute inset-0 flex flex-col items-center justify-center text-center",
-    size: "clamp(2.2rem, 5vw, 4.5rem)",
-    max: "20ch",
+    size: "clamp(2.75rem, 7vw, 6.5rem)",
+    max: "17ch",
+  },
+  "center-bottom": {
+    wrap: "absolute inset-x-0 bottom-[14vh] flex flex-col items-center text-center",
+    size: "clamp(2.5rem, 5.5vw, 4.75rem)",
+    max: "18ch",
   },
 };
 
 // Split a headline into per-word spans so each word can animate in sequence.
+// A "\n" in the text forces a hard line break; the stagger order carries across
+// lines so the entrance still reads left-to-right, top-to-bottom.
 function Words({ text }: { text: string }) {
-  const words = text.split(" ");
+  const lines = text.split("\n");
+  let word = 0;
   return (
     <>
-      {words.map((w, i) => (
-        <Fragment key={`${w}-${i}`}>
-          <span className="hero-anim inline-block">{w}</span>
-          {i < words.length - 1 ? " " : null}
+      {lines.map((line, li) => (
+        <Fragment key={`line-${li}`}>
+          {li > 0 ? <br /> : null}
+          {line.split(" ").map((w, i, arr) => {
+            const k = word++;
+            return (
+              <Fragment key={`${w}-${k}`}>
+                <span className="hero-anim inline-block">{w}</span>
+                {i < arr.length - 1 ? " " : null}
+              </Fragment>
+            );
+          })}
         </Fragment>
       ))}
     </>
@@ -70,6 +88,9 @@ export default function ScrollHero() {
   const railRefs = useRef<HTMLButtonElement[]>([]);
   const stRef = useRef<ScrollTrigger | null>(null);
   const activeRef = useRef(-1);
+  // Mirror the active state into React so per-state backgrounds (e.g. the Hero 3
+  // signal timeline) can play/reset. Only changes on a state transition.
+  const [activeIndex, setActiveIndex] = useState(0);
 
   // Crossfade the five layers by distance from the active snap point, and
   // highlight the rail number in view.
@@ -112,6 +133,7 @@ export default function ScrollHero() {
     (active: number) => {
       if (active === activeRef.current) return;
       activeRef.current = active;
+      setActiveIndex(active);
       layerRefs.current.forEach((l, idx) => {
         if (l) l.style.pointerEvents = idx === active ? "auto" : "none";
       });
@@ -186,9 +208,51 @@ export default function ScrollHero() {
               className="pointer-events-none absolute inset-0 z-10"
               style={{ opacity: 0 }}
             >
-              {s.index === "01" ? <HeroBackground /> : null}
-              {s.index === "02" ? <HeroBackgroundFoundation /> : null}
-              {s.index === "03" ? <HeroBackgroundData /> : null}
+              {s.invert ? <div aria-hidden className="absolute inset-0 bg-vellum" /> : null}
+              {s.index === "01" ? (
+                <>
+                  <EtherealShadow
+                    className="pointer-events-none"
+                    style={{ position: "absolute", inset: 0 }}
+                    sizing="fill"
+                    color="rgba(126, 132, 143, 1)"
+                    animation={{ scale: 70, speed: 90 }}
+                    noise={{ opacity: 0.4, scale: 1.1 }}
+                  />
+                  {/* Void scrim, darkest at the bottom-left where the headline sits. */}
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0"
+                    style={{
+                      background:
+                        "linear-gradient(to top right, color-mix(in srgb, var(--color-void) 90%, transparent) 0%, color-mix(in srgb, var(--color-void) 36%, transparent) 40%, transparent 72%)",
+                    }}
+                  />
+                </>
+              ) : null}
+              {s.index === "02" ? (
+                <HeroBackgroundTokens active={activeIndex === 1} />
+              ) : null}
+              {s.index === "04" ? (
+                <HeroBackgroundFolder active={activeIndex === 3} />
+              ) : null}
+              {s.index === "05" ? (
+                <HeroBackgroundSkills active={activeIndex === 4} />
+              ) : null}
+              {s.index === "03" ? (
+                <>
+                  <Boxes active={activeIndex === 2} />
+                  {/* Void scrim, darkest at the bottom-center where the text sits. */}
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0"
+                    style={{
+                      background:
+                        "radial-gradient(130% 80% at 50% 100%, color-mix(in srgb, var(--color-void) 86%, transparent) 0%, color-mix(in srgb, var(--color-void) 30%, transparent) 46%, transparent 76%)",
+                    }}
+                  />
+                </>
+              ) : null}
               <div className="absolute inset-0 px-4 sm:px-8 lg:px-20">
                 <div className="relative mx-auto h-full w-full max-w-[1400px]">
                   <div className={place.wrap}>
@@ -198,9 +262,9 @@ export default function ScrollHero() {
                           className="font-display font-extrabold uppercase text-vellum"
                           style={{
                             fontSize: place.size,
-                            lineHeight: 0.98,
+                            lineHeight: 1.0,
                             letterSpacing: "-0.02em",
-                            maxWidth: "22ch",
+                            maxWidth: "26ch",
                           }}
                         >
                           <Words text={s.headline} />
@@ -235,7 +299,9 @@ export default function ScrollHero() {
                             maxWidth: place.max,
                             color: s.ghost
                               ? "rgba(236,231,221,0.10)"
-                              : "var(--color-vellum)",
+                              : s.invert
+                                ? "var(--color-void)"
+                                : "var(--color-vellum)",
                             WebkitTextStroke: s.ghost
                               ? "1.5px var(--color-vellum)"
                               : undefined,
@@ -281,7 +347,9 @@ export default function ScrollHero() {
         {/* Keyboard-operable state rail. Each control jumps to a snap point. */}
         <nav
           aria-label="Hero states"
-          className="absolute left-4 top-1/2 z-20 hidden -translate-y-1/2 lg:block"
+          className={`hero-rail absolute left-4 top-1/2 z-20 hidden -translate-y-1/2 lg:block ${
+            heroStates[activeIndex]?.invert ? "hero-rail--on-light" : ""
+          }`}
         >
           <ol className="space-y-3">
             {heroStates.map((s, i) => (

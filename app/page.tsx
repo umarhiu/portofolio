@@ -2,7 +2,7 @@ import { Nav } from "@/components/site/Nav";
 import { Footer } from "@/components/site/Footer";
 import { Hero } from "@/components/home/Hero";
 import { Positioning } from "@/components/home/Positioning";
-import { SelectedWork } from "@/components/home/SelectedWork";
+import { WorkSection } from "@/components/home/WorkSection";
 import { ProofStrip } from "@/components/home/ProofStrip";
 import { Practice } from "@/components/home/Practice";
 import { About } from "@/components/home/About";
@@ -18,7 +18,7 @@ export default function Home() {
       <main id="main">
         <Hero />
         <Positioning />
-        <SelectedWork />
+        <WorkSection />
         <ProofStrip />
         <Practice />
         <About />

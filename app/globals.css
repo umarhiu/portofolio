@@ -104,6 +104,13 @@ html[data-hero="webgl"] #hero {
   min-height: 500dvh;
 }
 
+/* Same idea for the Selected Work index: when the capable-desktop GSAP
+   cinematic mounts (data-work set by WorkEnhancer), hide the static fallback
+   grid. The cinematic island provides its own 360dvh scroll track. */
+html[data-work="cinematic"] .work-static {
+  display: none;
+}
+
 /* The scene fades in instead of popping once its chunk loads. */
 @keyframes hero-fade-in {
   from {
@@ -312,6 +319,24 @@ html[data-hero="webgl"] #hero {
       transform: scaleX(1);
       background-color: var(--color-accent);
     }
+    .hero-rail--on-light .hero-rail__btn:hover {
+      color: var(--color-void);
+    }
+  }
+  /* Light surface (e.g. state 05 / vellum): flip the rail to dark for contrast. */
+  .hero-rail--on-light .hero-rail__btn {
+    color: rgba(11, 13, 16, 0.5);
+  }
+  .hero-rail--on-light .hero-rail__btn[data-active="true"],
+  .hero-rail--on-light .hero-rail__btn:focus-visible {
+    color: var(--color-void);
+  }
+  .hero-rail--on-light .hero-rail__tick {
+    background-color: rgba(11, 13, 16, 0.28);
+  }
+  .hero-rail--on-light .hero-rail__btn[data-active="true"] .hero-rail__tick,
+  .hero-rail--on-light .hero-rail__btn:focus-visible .hero-rail__tick {
+    background-color: var(--color-accent);
   }
 }
 
