@@ -39,7 +39,12 @@ const CARDS: Card[] = [
   { kind: "pill", top: "62%", left: "30%", label: "8px", sub: "space.sm", speed: 300 },
   { kind: "swatch", top: "62%", left: "78%", w: 124, swatch: "#3a5a78", name: "Drafting Blue", hex: "3A5A78", speed: -280, speedX: 40 },
   { kind: "swatch", top: "66%", left: "11%", w: 124, swatch: "#7e848f", name: "Graphite", hex: "7E848F", speed: 210, speedX: 70 },
-  { kind: "pill", top: "42%", left: "8%", label: "24px", sub: "space.lg", speed: -230 },
+  // Pinned a fixed clearance below the text anchor (the headline block sits at
+  // top-[19vh] with a near-fixed px height), not a raw % of the viewport. A raw
+  // % shrinks to fewer px on short laptop heights and rode up into the "rules
+  // everything inherits." sub line; the calc keeps it the same gap below the
+  // text at every height, so it never collides.
+  { kind: "pill", top: "calc(19vh + 260px)", left: "8%", label: "24px", sub: "space.lg", speed: -230 },
   { kind: "pill", top: "52%", left: "89%", label: "1px", sub: "hairline", speed: 250 },
   { kind: "figma", top: "80%", left: "46%", src: "/asset/hero/figma/ready-dev.svg", w: 40, speed: -150 },
   // Figma annotation chips scattered among the tokens.

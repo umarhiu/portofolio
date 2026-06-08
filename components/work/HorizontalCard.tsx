@@ -1,27 +1,39 @@
+import { type FocusEvent } from "react";
+import { Link } from "next-view-transitions";
+import { ArrowUpRight } from "lucide-react";
 import type { Project } from "@/lib/content";
 
 /*
-  Wide card used ONLY during the cinematic's sticky-stacking phase: media on the
-  left, text on the right. It is decorative (aria-hidden) and carries no link or
-  viewTransitionName -- the interactive, navigable cards are the grid
-  (ProjectCard) at the finale, so we avoid duplicate view-transition names and
-  duplicate links. Opaque surface + shadow so stacked cards occlude cleanly.
+  Wide card for the cinematic's sticky scroll-stack: media on the left, text on
+  the right. Each card is a real link to its case file (/work/[slug]); the
+  cinematic flags the front card data-active on its wrapper, and globals.css
+  reveals the "View case file" CTA + the hover lift only on that active card.
+
+  Carries the title-{slug} view-transition name. No duplicate-name clash with the
+  fallback grids because the stack and the grids are never display-rendered at the
+  same time (the cinematic display:none-toggles per reduced-motion mode, and the
+  static grid is display:none whenever data-work=cinematic).
 */
 export function HorizontalCard({
   project,
   index,
   total,
+  href,
+  onFocus,
 }: {
   project: Project;
   index: number;
   total: number;
+  href: string;
+  onFocus?: (e: FocusEvent<HTMLAnchorElement>) => void;
 }) {
   const num = String(index + 1).padStart(2, "0");
   const tot = String(total).padStart(2, "0");
   return (
-    <div
-      aria-hidden="true"
-      className="flex h-full w-full overflow-hidden border border-hairline"
+    <Link
+      href={href}
+      onFocus={onFocus}
+      className="hcard__link flex h-full w-full overflow-hidden border border-hairline"
       style={{
         backgroundColor:
           "color-mix(in srgb, var(--color-vellum) 6%, var(--color-void))",
@@ -47,7 +59,10 @@ export function HorizontalCard({
         </div>
         <div
           className="mt-5 font-display font-extrabold uppercase leading-[1] tracking-tight text-vellum"
-          style={{ fontSize: "clamp(1.6rem, 2.8vw, 2.9rem)" }}
+          style={{
+            fontSize: "clamp(1.6rem, 2.8vw, 2.9rem)",
+            viewTransitionName: `title-${project.slug}`,
+          }}
         >
           {project.title}
         </div>
@@ -60,7 +75,13 @@ export function HorizontalCard({
         <p className="mt-6 font-mono text-xs uppercase tracking-[0.18em] text-graphite">
           {project.context}
         </p>
+        {/* Click cue: revealed by globals.css only on the active (front) card,
+            fills amber on hover. The whole card is the link; this is the prompt. */}
+        <span className="hcard__cta mt-7 inline-flex w-fit items-center gap-2 border border-vellum/30 px-4 py-2 font-mono text-xs uppercase tracking-[0.18em] text-vellum">
+          View case file
+          <ArrowUpRight className="hcard__arrow" size={14} strokeWidth={1.5} aria-hidden="true" />
+        </span>
       </div>
-    </div>
+    </Link>
   );
 }

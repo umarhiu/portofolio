@@ -124,6 +124,68 @@ html[data-work="cinematic"] .work-static {
   animation: hero-fade-in 500ms var(--ease-out) both;
 }
 
+/* State-04 component holder (HeroBackgroundFolder) sits at top-[8%] with a fixed
+   pixel height, while the state-04 headline is anchored to bottom-[13vh]. On a
+   short laptop the holder's bottom (pocket + caption) drops into the headline.
+   Scaling from center-top means a smaller scale pulls the bottom up and clears
+   the text. Steps are sized so the holder bottom always stays above the headline. */
+.hero-folder-stage {
+  --folder-scale: 1.4;
+}
+@media (max-height: 900px) {
+  .hero-folder-stage {
+    --folder-scale: 1.18;
+  }
+}
+@media (max-height: 780px) {
+  .hero-folder-stage {
+    --folder-scale: 1.02;
+  }
+}
+@media (max-height: 680px) {
+  .hero-folder-stage {
+    --folder-scale: 0.9;
+  }
+}
+
+/* Selected Work sticky scroll-stack: only the active (front) card exposes its
+   click affordance. The cinematic flags that card data-active and gates
+   pointer-events to it, so hover only fires there. Kept unlayered so the hover
+   border-color wins over the Tailwind border-hairline utility. */
+.hcard__cta {
+  opacity: 0;
+  transition:
+    opacity 200ms var(--ease-out),
+    background-color 200ms var(--ease-out),
+    color 200ms var(--ease-out),
+    border-color 200ms var(--ease-out);
+}
+.hcard[data-active="true"] .hcard__cta {
+  opacity: 1;
+}
+.hcard__arrow {
+  transition: transform 200ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .hcard[data-active="true"] .hcard__link:hover {
+    border-color: rgba(236, 231, 221, 0.28);
+  }
+  .hcard[data-active="true"] .hcard__link:hover .hcard__cta {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-void);
+  }
+  .hcard[data-active="true"] .hcard__link:hover .hcard__arrow {
+    transform: translate(2px, -2px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hcard__cta,
+  .hcard__arrow {
+    transition: none;
+  }
+}
+
 @keyframes cta-glint {
   0%,
   10% {

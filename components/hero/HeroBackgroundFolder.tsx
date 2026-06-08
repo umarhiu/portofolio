@@ -305,7 +305,11 @@ export function HeroBackgroundFolder({ active = false }: { active?: boolean }) {
 
   return (
     <div ref={ref} aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-[8%] z-20 flex justify-center">
-      <div className="relative" style={{ width: 420, height: 408, perspective: 900, transform: "scale(1.4)", transformOrigin: "center top" }}>
+      {/* scale lives in a CSS var so viewport-height media queries (globals.css)
+          can shrink the holder on short laptops; it scales from center-top, so a
+          smaller scale lifts the bottom edge clear of the bottom-anchored state-04
+          headline instead of overlapping it. */}
+      <div className="hero-folder-stage relative" style={{ width: 420, height: 408, perspective: 900, transform: "scale(var(--folder-scale, 1.4))", transformOrigin: "center top" }}>
         {/* drop shadow */}
         <div className="absolute rounded-full" style={{ left: 100, top: 366, width: 220, height: 34, background: "rgba(0,0,0,0.6)", filter: "blur(20px)", zIndex: 0 }} />
 

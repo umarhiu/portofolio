@@ -89,6 +89,23 @@ Companion docs: the full build contract lives in `docs/substrate-build-spec.md`.
 15. During the stack the cards should be sticky near the top, about 40px below
     the navbar, not floating in the vertical centre. The first card rises from
     under the title to that top rest as the title clears.
+16. Responsive overlap on short laptop heights (fine on large screens). Two hero
+    backgrounds collided with text only at laptop viewport heights: the state 02
+    "24px space.lg" token chip landed on the "rules everything inherits." sub
+    line, and the state 04 component folder (pocket + "click to open" caption)
+    dropped onto the "Every state designed." headline. Both read fine on tall
+    monitors. Cause and fix in lesson 18.
+17. Selected Work depth cue: the cards already in the stack should look 3D as a
+    new card lands. Two passes he asked for, in order: (a) the stacked cards get
+    SMALLER the deeper they sit; (b) they also get more TRANSPARENT the deeper
+    they sit (more stacked = smaller + fainter), so the deck recedes into the void.
+18. Selected Work flow CHANGE (supersedes items 9, 11, 12, lesson 16, and the old
+    HorizontalCard note in section 7). It should STAY stacked: no bloom into the
+    full 3x2 grid. The last card is the end of the section. The cards are now
+    clickable to open the case file. Chosen via clarifying questions: a "sticky
+    scroll-stack" where only the front (active) card is clickable and carries a
+    hover lift + a "View case file" button cue, and clicking navigates to the
+    /work/[slug] page (not an in-place modal).
 
 ## 5. How he likes me to work
 
@@ -172,16 +189,49 @@ Companion docs: the full build contract lives in `docs/substrate-build-spec.md`.
     mis-push bug. Drive a paused master timeline via tl.progress(self.progress)
     in onUpdate, on a normalised [0,1] clock (a 1-unit spacer tween fixes total
     duration to 1).
-16. Stack-to-grid via hand-rolled FLIP. The grid cards live in the real CSS grid
-    (honest, clickable DOM, correct view-transitions, no ghost tree, no reflow
-    swap). The deck/stack is an inverse transform on top: measure each card's
-    true slot and the pile centre, store the delta, tween it to zero. Remeasure
-    on every ScrollTrigger refresh so the landing is correct at any viewport.
+16. Stack-to-grid via hand-rolled FLIP. (SUPERSEDED by section-4 item 18 and
+    lessons 19-20: the stack no longer blooms into a grid, so this FLIP code was
+    removed. Kept for history.) The grid cards live in the real CSS grid (honest,
+    clickable DOM, correct view-transitions, no ghost tree, no reflow swap). The
+    deck/stack is an inverse transform on top: measure each card's true slot and
+    the pile centre, store the delta, tween it to zero. Remeasure on every
+    ScrollTrigger refresh so the landing is correct at any viewport.
 17. Trust but verify review agents (again, see lesson 8). The adversarial review
     confirmed three real fixes but also proposed replacing a function-based
     fromTo from-value with a frozen constant, which would have broken resize
     re-resolution (GSAP only re-evaluates function values on invalidate). Trace
     the GSAP / CSS semantics before applying a review fix.
+18. Responsive overlap: top-anchored fixed-px decoration vs viewport-relative
+    text. A decoration pinned to the top with a near-fixed pixel height (the
+    state-04 folder at top-[8%], scale 1.4) or a chip at a raw top:% rides INTO
+    bottom-anchored or flow text as the viewport shortens, while looking fine when
+    tall (its % resolves to fewer px and climbs into the text). Fix by tracking
+    the SAME anchor the text uses: (a) pin a chip a fixed clearance below the
+    text's own anchor, top: calc(19vh + 260px) instead of a raw %, so it sits the
+    same gap below at every height; (b) drive a decoration's scale from a CSS var
+    that viewport-HEIGHT media queries shrink (--folder-scale: 1.4 down to 0.9),
+    scaling from center-top so a smaller scale lifts the bottom edge clear of the
+    text. Short screens are also narrower, so the text shrinks too, adding margin.
+19. Stay-stacked Selected Work: unique view-transition names without the grid
+    finale. The stacking cards now ARE the navigable links (title-{slug} on the
+    title), and the in-stage grid is only the reduced-motion-mid-session fallback.
+    To avoid duplicate view-transition names, the stack and the grid are never
+    display-rendered at the same time: under motion gsap.set(deck,{display:"none"});
+    under a reduced-motion mid-session flip the matchMedia reduce branch
+    gsap.set(hcards,{display:"none"}) and shows the grid. The external static
+    .work-static grid is already display:none under data-work=cinematic. Only
+    display:none (not opacity/visibility) makes a name inert for VT capture.
+20. Stay-stacked Selected Work: keyboard reach + depth recede. (a) Keyboard: every
+    card stays in the tab order, so hide undealt cards with plain opacity, NOT
+    autoAlpha (autoAlpha sets visibility:hidden, which drops the element from the
+    tab order). On focus, scroll that card to the front (st.scroll to its rest
+    progress) and gate that behind :focus-visible so a mouse click does not jump.
+    Only the front card gets pointer-events:auto, derived idempotently from
+    progress (no latch). (b) Depth recede: animate scale AND opacity down per depth
+    level with transformOrigin "50% 0%" so the peeking tops stay fixed; use
+    ABSOLUTE targets (not "-=") so they survive invalidateOnRefresh (lesson 17);
+    read offsetHeight (not getBoundingClientRect) for layout measures that must
+    ignore the live scale.
 
 ## 7. Project conventions to remember
 
@@ -199,21 +249,36 @@ Companion docs: the full build contract lives in `docs/substrate-build-spec.md`.
   island (`components/work/SelectedWorkCinematic.tsx`) is code-split and gated by
   `WorkEnhancer` (pointer:fine, min-width 1024, no reduced-motion), mirroring
   `HeroEnhancer` with an `html[data-work="cinematic"]` attribute that hides the
-  static `.work-static` grid. The static, filterable `<SelectedWork/>` grid is
-  the SSR / mobile / reduced-motion / no-JS fallback. Both share one
-  `<ProjectCard>` so content, hrefs, and `viewTransitionName` never drift; the
-  decorative horizontal stacking card (`HorizontalCard`) carries no link or
-  view-transition name to avoid duplicates. GSAP enters only via this code-split
-  chunk, so the home First Load JS stays put (about 160 kB).
+  static `.work-static` grid. The cinematic is now a sticky SCROLL-STACK that
+  STAYS stacked (no grid finale): cards deal up one per scroll beat, each new one
+  lands in front while the deck behind recedes (scale) and dims (opacity) per
+  depth level; the last card (06/06) is the end state. Only the front (active)
+  card is clickable, derived from scroll progress, and it carries a hover lift +
+  a "View case file" button (styled in `globals.css` off `.hcard[data-active]`).
+  `HorizontalCard` is therefore now a real link to `/work/[slug]` carrying the
+  `title-{slug}` view-transition (NOT decorative any more). Duplicate
+  view-transition names are avoided by never display-rendering the stack and any
+  grid at the same time (see lesson 19). The static, filterable `<SelectedWork/>`
+  grid (`.work-static`) is the SSR / mobile / reduced-motion / no-JS fallback; the
+  cinematic also keeps an in-stage grid as the reduced-motion-mid-session
+  fallback. GSAP enters only via this code-split chunk, so the home First Load JS
+  stays put (about 160 kB).
 - Non-negotiables: full reduced-motion and no-WebGL fallbacks with byte-identical
   copy, keyboard-operable hero, WCAG AA, LCP under 2.5s with SSR text first,
   CLS near zero, motivated motion only, one theme (locked dark).
 
-## 8. Environment notes (this machine)
+## 8. Environment notes
 
-- Windows, PowerShell, Node 24, npm 11. Working dir `d:\NEXUS\Umar2`.
+- Current machine: macOS (darwin), bash, Node 22.17, npm 10.9. Working dir
+  `/Users/umar/portofolio`. (The project was previously built on a Windows /
+  PowerShell / Node 24 machine at `d:\NEXUS\Umar2`; the PowerShell-specific
+  commands in lesson 1 are from there.)
 - `npm install`, `next build`, and `next dev` need network, so run them with the
   sandbox disabled.
+- Dev server: `npm run dev` serves on port 3002. On macOS, kill a stuck listener
+  with `lsof -ti :3002 | xargs kill -9`. In the agent harness the backgrounded
+  `next dev` tends to exit on its own once a turn ends, so it usually needs a
+  restart at the start of a session before he can view the site.
 - Git repo: origin `https://github.com/umarhiu/portofolio.git`, default branch
   `main`. Work is committed straight to `main` (solo portfolio, linear history);
   he asks to "push and commit" rather than open PRs.
