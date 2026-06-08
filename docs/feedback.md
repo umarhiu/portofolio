@@ -68,6 +68,27 @@ Companion docs: the full build contract lives in `docs/substrate-build-spec.md`.
    and feel seamless not messy, and the text should be placed on the left.
 8. Then refined: scrolling back up should reverse the motion (bidirectional).
    Net rule for scroll reveals: default to reversible and spring-smoothed.
+9. Selected Work concept: the "Selected Work" title should appear from behind
+   the previous section (same reveal feel as the Positioning statement), then
+   reveal the 6 project cards one by one, stacked, then expand the stack into
+   the full grid where all 6 are visible together. Use GSAP.
+10. Stacked cards must have an opaque surface. Near-transparent cards
+    (rgba vellum at 0.02 on void) let every stacked card's text bleed through
+    and read as a mess; opaque cards occlude the ones beneath.
+11. Sequencing: the title must fully disappear BEFORE the cards reveal (no
+    overlap), then reappear as a top-left section header with a description
+    AFTER all the cards have landed.
+12. Reworked the card layout to horizontal (media left, text right) and the
+    reveal to a sticky stack: the first card sticks and each next card deals up
+    and stacks on top, like a "how we work" process section. End state stays the
+    compact 3x2 grid from the prior version (he picked "grid" when asked).
+13. Alignment: the cinematic title was not lining up with the other sections.
+    Match the site's container exactly so the left edge aligns with the text
+    above (see lesson 12 in section 6).
+14. The cards should fill the section width, not sit in a narrower centred box.
+15. During the stack the cards should be sticky near the top, about 40px below
+    the navbar, not floating in the vertical centre. The first card rises from
+    under the title to that top rest as the title clears.
 
 ## 5. How he likes me to work
 
@@ -123,6 +144,44 @@ Companion docs: the full build contract lives in `docs/substrate-build-spec.md`.
 10. Edit-tool escaping. JSON decodes `\uXXXX` in tool arguments to the actual
     glyph. To write a literal escape sequence into a file, use code points in
     the logic or double-escape the backslash.
+11. GSAP fromTo immediateRender. In a scrubbed timeline, fromTo defaults to
+    immediateRender:true, so it paints its from-state at build time and the
+    element flashes visible before the scrub reaches it (the cards showed at
+    progress 0). Set immediateRender:false on staggered/later fromTo tweens and
+    hide the initial state with an explicit gsap.set, so each element stays
+    hidden until its own playhead arrives.
+12. Section container nesting. Every section nests as outer padding then inner
+    max-w-[1400px] mx-auto (px-4 sm:px-8 lg:px-20 on the outer). Putting both on
+    one element (max-w then padding) indents the content by the padding amount
+    and breaks left-edge alignment with the rest of the page. Match the
+    outer-padding-then-inner-max-w pattern; for absolute overlays, pad the
+    inset-0 element and centre an inner max-w wrapper.
+13. matchMedia cleanup. A gsap.matchMedia() created inside useGSAP is NOT
+    reverted by the useGSAP context revert. Return () => mm.revert() from the
+    useGSAP callback so its listeners and tweens tear down on unmount (the
+    WebGLHero pattern).
+14. Reduced-motion fallback for animated layers. Default the decorative animated
+    elements (intro title, the stacking cards) to opacity-0 in CSS and leave the
+    resting content (the grid) visible. Then a matchMedia revert (reduced-motion
+    toggled mid-session) clears GSAP's inline styles and the stage falls back to
+    a clean, clickable grid with no leftover overlapping layers.
+15. Pin with CSS sticky, ScrollTrigger only for scrubbed progress. The whole
+    site pins via position:sticky (hero, Positioning, the work cinematic); never
+    ScrollTrigger pin:true. pin:true injects a pin-spacer that, sitting next to
+    the Positioning negative-margin reveal, is the classic "jumps a section" /
+    mis-push bug. Drive a paused master timeline via tl.progress(self.progress)
+    in onUpdate, on a normalised [0,1] clock (a 1-unit spacer tween fixes total
+    duration to 1).
+16. Stack-to-grid via hand-rolled FLIP. The grid cards live in the real CSS grid
+    (honest, clickable DOM, correct view-transitions, no ghost tree, no reflow
+    swap). The deck/stack is an inverse transform on top: measure each card's
+    true slot and the pile centre, store the delta, tween it to zero. Remeasure
+    on every ScrollTrigger refresh so the landing is correct at any viewport.
+17. Trust but verify review agents (again, see lesson 8). The adversarial review
+    confirmed three real fixes but also proposed replacing a function-based
+    fromTo from-value with a frozen constant, which would have broken resize
+    re-resolution (GSAP only re-evaluates function values on invalidate). Trace
+    the GSAP / CSS semantics before applying a review fix.
 
 ## 7. Project conventions to remember
 
@@ -136,6 +195,16 @@ Companion docs: the full build contract lives in `docs/substrate-build-spec.md`.
   SSR static fallback. Only a capable desktop with WebGL2 gets the live R3F
   hero. The SSR static hero is the LCP source and the fallback; the WebGL
   enhancer mounts client-side and hides the static layout.
+- Work index follows the same enhancer pattern. A desktop-only GSAP cinematic
+  island (`components/work/SelectedWorkCinematic.tsx`) is code-split and gated by
+  `WorkEnhancer` (pointer:fine, min-width 1024, no reduced-motion), mirroring
+  `HeroEnhancer` with an `html[data-work="cinematic"]` attribute that hides the
+  static `.work-static` grid. The static, filterable `<SelectedWork/>` grid is
+  the SSR / mobile / reduced-motion / no-JS fallback. Both share one
+  `<ProjectCard>` so content, hrefs, and `viewTransitionName` never drift; the
+  decorative horizontal stacking card (`HorizontalCard`) carries no link or
+  view-transition name to avoid duplicates. GSAP enters only via this code-split
+  chunk, so the home First Load JS stays put (about 160 kB).
 - Non-negotiables: full reduced-motion and no-WebGL fallbacks with byte-identical
   copy, keyboard-operable hero, WCAG AA, LCP under 2.5s with SSR text first,
   CLS near zero, motivated motion only, one theme (locked dark).
@@ -145,5 +214,6 @@ Companion docs: the full build contract lives in `docs/substrate-build-spec.md`.
 - Windows, PowerShell, Node 24, npm 11. Working dir `d:\NEXUS\Umar2`.
 - `npm install`, `next build`, and `next dev` need network, so run them with the
   sandbox disabled.
-- Not a git repo yet (I offered to `git init` several times; he has not asked
-  for it). Re-offer when it next makes sense.
+- Git repo: origin `https://github.com/umarhiu/portofolio.git`, default branch
+  `main`. Work is committed straight to `main` (solo portfolio, linear history);
+  he asks to "push and commit" rather than open PRs.
