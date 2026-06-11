@@ -40,11 +40,23 @@ export function HorizontalCard({
         boxShadow: "0 30px 60px -30px rgba(0, 0, 0, 0.85)",
       }}
     >
-      {/* Media (left) */}
-      <div className="relative flex w-1/2 items-center justify-center border-r border-hairline bg-[rgba(236,231,221,0.02)]">
-        <span className="font-mono text-[11px] uppercase tracking-[0.24em] text-graphite">
-          {project.type}
-        </span>
+      {/* Media (left): the cover image if set, else the type label. */}
+      <div className="relative w-1/2 overflow-hidden border-r border-hairline bg-[rgba(236,231,221,0.02)]">
+        {project.cover ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={project.cover}
+            alt=""
+            aria-hidden="true"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <span className="font-mono text-[11px] uppercase tracking-[0.24em] text-graphite">
+              {project.type}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Text (right) */}
@@ -72,6 +84,16 @@ export function HorizontalCard({
         >
           {project.outcome}.
         </p>
+        {project.stack ? (
+          <div className="mt-6">
+            <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-graphite">
+              {project.stackLabel ?? "Stack"}
+            </span>
+            <p className="mt-1 font-mono text-[13px] uppercase tracking-[0.16em] text-vellum/85">
+              {project.stack.join("  /  ")}
+            </p>
+          </div>
+        ) : null}
         <p className="mt-6 font-mono text-xs uppercase tracking-[0.18em] text-graphite">
           {project.context}
         </p>

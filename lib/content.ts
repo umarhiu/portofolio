@@ -101,10 +101,48 @@ export const heroStates: HeroState[] = [
 
 export type Depth = "DEEP DIVE" | "BRIEF";
 export type ProjectType =
+  | "Ways of Working"
   | "Dashboard"
   | "Workflow"
   | "Design System"
   | "Zero-to-One";
+
+// Rich, per-project case study content. Optional: a project without `study`
+// falls back to the placeholder reading spine on the case study page, so real
+// content can land one project at a time without touching the others.
+export interface StudySection {
+  heading: string;
+  body: string[];
+}
+
+// A two-path comparison (the conventional route vs the route I run). Compares
+// methods, never people.
+export interface StudyComparison {
+  flow: string;
+  conventional: { label: string; points: string[] };
+  mine: { label: string; points: string[] };
+}
+
+export interface CaseStudy {
+  lede: string;
+  role: string;
+  duration: string;
+  metric: { value: string; label: string };
+  // The AI workflow itself, the highlight: ordered stages, the tool each uses,
+  // and what it does.
+  loop?: { step: string; tool: string; detail: string }[];
+  comparison?: StudyComparison;
+  // Optional live prototype to embed as proof (the clickable build). Must be a
+  // public, embeddable URL.
+  prototypeUrl?: string;
+  // Optional before/after screenshots of the result.
+  before?: string;
+  after?: string;
+  // Optional gallery of full-width captioned shots, for wide reference boards
+  // (file structure, foundations, components) that should not be cropped.
+  gallery?: { src: string; caption: string }[];
+  sections: StudySection[];
+}
 
 export interface Project {
   slug: string;
@@ -114,19 +152,171 @@ export interface Project {
   type: ProjectType;
   outcome: string;
   mock: boolean;
+  cover?: string; // card media image (else the type label shows)
+  stack?: string[]; // items surfaced on the card (tools, system makeup, ...)
+  stackLabel?: string; // label above the stack line (e.g. "AI workflow")
+  study?: CaseStudy;
 }
 
 // MOCK set. Anonymized to context, not invented client brands, so nothing
 // implies a real relationship until real content lands.
 export const projects: Project[] = [
   {
-    slug: "observability-console",
-    title: "Observability console redesign",
-    context: "Series-C devtools platform",
+    slug: "reusely-design-workflow",
+    title: "Two paths to the same screen",
+    context: "Reusely, infrastructure for trade-ins and reverse commerce",
     depth: "DEEP DIVE",
-    type: "Dashboard",
-    outcome: "Time to acknowledge an incident down 41 percent",
-    mock: true,
+    type: "Ways of Working",
+    outcome: "The whole widget clickable, faster than Figma mockups",
+    mock: false,
+    cover: "/asset/project/widget-cover.webp",
+    stack: ["ChatGPT", "Claude Code", "Figma MCP"],
+    stackLabel: "AI workflow",
+    study: {
+      lede: "Reusely is the platform for trade-ins, buybacks, and reverse commerce: programs, reverse logistics, inventory intake, automated pricing, offers, and payouts. I run product design there on an AI-augmented loop, and I prototype most features this way. Given the same brief as the conventional Figma-first path, the loop reaches a clickable, working prototype faster, one that runs the real logic instead of faking it in static frames. This is one of those prototypes, the trade-in widget, taken down both roads.",
+      role: "Product designer, Reusely",
+      duration: "Ongoing",
+      metric: {
+        value: "Every state",
+        label: "the widget's logic, settings, and edge cases built as a working prototype, not faked in static Figma frames",
+      },
+      loop: [
+        {
+          step: "Brainstorm",
+          tool: "ChatGPT",
+          detail: "Frame the real problem and pressure-test options before any pixels.",
+        },
+        {
+          step: "Prototype",
+          tool: "Claude Code",
+          detail: "Build the real, clickable thing: the actual logic, settings, and edge cases, not static frames.",
+        },
+        {
+          step: "Systemize",
+          tool: "Figma MCP",
+          detail: "Generate components straight from the design system, so there is no drift to reconcile.",
+        },
+        {
+          step: "Iterate",
+          tool: "Figma",
+          detail: "Refine and polish on top of a build that already works.",
+        },
+      ],
+      comparison: {
+        flow: "The trade-in widget redesign. Businesses embed Reusely's widget on their own website so their customers can sell an item and get an instant offer. The widget itself had drifted inconsistent, and the setup the business configures it through confused them. The job: one consistent selling experience for the customer, and a setup that is obvious for the business to stand up.",
+        conventional: {
+          label: "The conventional path",
+          points: [
+            "Wireframe, then a high-fidelity mockup, screen by screen in Figma.",
+            "Build each component by hand, then reconcile it against the design system.",
+            "Iterate by editing static frames; the prototype is a click-through of images.",
+            "Strong on deliberate craft and control. Slow to a testable build, and the system drifts as the screens multiply.",
+          ],
+        },
+        mine: {
+          label: "The path I run",
+          points: [
+            "A clickable, working build, not a click-through of static images.",
+            "It runs the real logic and every edge case, so the prototype behaves like the product.",
+            "Components come straight from the design system, so there is no drift to reconcile.",
+            "Fast to something testable, and my judgment gates every handoff. The four stages are above.",
+          ],
+        },
+      },
+      prototypeUrl: "https://reusely-prototype.vercel.app/prototypes/settings/widget",
+      before: "/asset/project/widget-before.webp",
+      after: "/asset/project/widget-after.webp",
+      sections: [
+        {
+          heading: "Where my judgment lives",
+          body: [
+            "The tools are leverage, not the designer. ChatGPT does not decide the problem, it widens the option space I choose from. Claude Code does not decide the interaction, it builds the version I specify so I can feel it in the browser. MCP does not decide the component, it enforces the system I already designed.",
+            "The speed comes from removing the manual rebuild, never from removing the decision. Every gate is one I own.",
+          ],
+        },
+        {
+          heading: "Same destination, the difference",
+          body: [
+            "Both paths ship the same widget. The difference is what the prototype actually is: mine runs the real logic and handles the edge cases, where a Figma version would be dozens of static frames faking each state.",
+            "It came together in roughly one to two focused weeks, spread across a month while I split time with another feature, and still faster than mocking the same scope in Figma.",
+          ],
+        },
+        {
+          heading: "Where the conventional path still wins",
+          body: [
+            "When a problem is genuinely new and the system has no answer for it yet, slowing down in Figma to invent the pattern by hand is the right call. The loop is for everything the system already knows how to express.",
+            "What I would change next: tighten the prompt-to-component contract so the MCP step needs less correction, and capture the brainstorm so the rationale survives the speed.",
+          ],
+        },
+      ],
+    },
+  },
+  {
+    slug: "reusely-design-system",
+    title: "One source of truth",
+    context: "Reusely, infrastructure for trade-ins and reverse commerce",
+    depth: "DEEP DIVE",
+    type: "Design System",
+    outcome: "Scattered files into one reusable system, adopted across products",
+    mock: false,
+    cover: "/asset/project/ds-cover.webp",
+    stack: ["Figma variables", "Tokens", "Components"],
+    stackLabel: "Built with",
+    study: {
+      lede: "Reusely's design system had drifted into scattered files: duplicated components, inconsistent variants, and naming so unclear that the only way to understand prior work was to ask the previous designer. I rebuilt it solo, in about a month, into one reusable system: tokens and foundations as Figma variables, components built from them and documented, all named so the system explains itself. It is now the single source of truth the team builds on across products.",
+      role: "Product designer, Reusely",
+      duration: "About a month, solo",
+      metric: {
+        value: "One system",
+        label: "scattered, duplicated files consolidated into a single reusable source of truth, adopted across products",
+      },
+      gallery: [
+        {
+          src: "/asset/project/ds-before.webp",
+          caption: "Before: scattered, unnamed files",
+        },
+        {
+          src: "/asset/project/ds-after.webp",
+          caption: "After: one organized, named library",
+        },
+        {
+          src: "/asset/project/ds-foundation.webp",
+          caption: "Foundations as Figma variables",
+        },
+        {
+          src: "/asset/project/ds-component.webp",
+          caption: "Documented components",
+        },
+      ],
+      sections: [
+        {
+          heading: "The old system",
+          body: [
+            "Components were scattered across the project with little reuse, and variants drifted out of sync. Files were unnamed or named badly, so understanding prior work meant asking the previous designer rather than reading the system.",
+            "Maintaining it was guesswork: find the right file, and hope it was the current one.",
+          ],
+        },
+        {
+          heading: "What I rebuilt",
+          body: [
+            "One organized library, named so it explains itself. Foundations as Figma variables (color, type, spacing) feed the tokens, every component is built from them, and each is documented with its states and usage.",
+            "Reuse is the default, and consistency is enforced by the system rather than by vigilance.",
+          ],
+        },
+        {
+          heading: "What it changed",
+          body: [
+            "Collaboration got cleaner: anyone can find the right component without tribal knowledge. The system is adopted across products, and changing a pattern once updates it everywhere it is used.",
+          ],
+        },
+        {
+          heading: "What I would change",
+          body: [
+            "Tighten the path from Figma variables into code so the system stays true on both sides, and keep the documentation next to the components so it never drifts again.",
+          ],
+        },
+      ],
+    },
   },
   {
     slug: "underwriting-workflow",
@@ -135,15 +325,6 @@ export const projects: Project[] = [
     depth: "DEEP DIVE",
     type: "Workflow",
     outcome: "Underwriting throughput up 3x",
-    mock: true,
-  },
-  {
-    slug: "design-system-pipeline",
-    title: "Design system and token pipeline",
-    context: "Multi-product enterprise suite",
-    depth: "DEEP DIVE",
-    type: "Design System",
-    outcome: "280 plus components, three products on one system",
     mock: true,
   },
   {
@@ -176,6 +357,7 @@ export const projects: Project[] = [
 ];
 
 export const projectTypes: ProjectType[] = [
+  "Ways of Working",
   "Dashboard",
   "Workflow",
   "Design System",

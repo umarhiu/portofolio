@@ -60,13 +60,25 @@ export function ProjectCard({
     >
       <div
         className={
-          "flex items-center justify-center border border-hairline bg-[rgba(236,231,221,0.02)] " +
+          "relative overflow-hidden border border-hairline bg-[rgba(236,231,221,0.02)] " +
           (compact ? "mb-4 h-[clamp(72px,11vh,140px)]" : "mb-6 aspect-[16/10]")
         }
       >
-        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-graphite">
-          {project.type}
-        </span>
+        {project.cover ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={project.cover}
+            alt=""
+            aria-hidden="true"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-graphite">
+              {project.type}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className={(compact ? "mb-2 " : "mb-3 ") + "flex items-center justify-between gap-4"}>
