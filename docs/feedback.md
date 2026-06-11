@@ -106,6 +106,28 @@ Companion docs: the full build contract lives in `docs/substrate-build-spec.md`.
     scroll-stack" where only the front (active) card is clickable and carries a
     hover lift + a "View case file" button cue, and clicking navigates to the
     /work/[slug] page (not an in-place modal).
+19. Began replacing the mock work index with real case studies, one card at a time,
+    each linking to a real /work/[slug] page. #1 = the Reusely AI design workflow
+    (new "Ways of Working" type). #2 = the Reusely design system ("Design System"
+    type, replaced the mock pipeline; still 6 cards, no duplicate). Reusely and the
+    tools are named (he confirmed).
+20. #1 framing (chosen via clarifying questions): "two paths to the same screen",
+    his AI loop (ChatGPT brainstorm, Claude Code prototype, Figma MCP components,
+    Figma iterate) against the conventional manual-Figma path, told through ONE
+    example, the trade-in widget. The AI workflow is the subject; the widget is one
+    example, not the whole story. The loop is its own highlighted section, and the
+    card surfaces it with an "AI workflow" stack line.
+21. Honesty correction. My first proof line "hours not days" was an overclaim (the
+    widget was about one to two focused weeks across a month, split with another
+    feature). Reframed to the honest, stronger claim: a working build that runs the
+    real logic and every edge case, which a Figma prototype can only fake as static
+    frames. Never ship fake-precise numbers.
+22. He supplies the assets: real before/after screenshots plus a generated, abstract
+    on-brand cover, and he removed the prototype iframe embed for a plain link. For
+    #2 the "before" was so scattered he had to ask the previous designer to
+    understand prior work; the "after" is one named library (foundations as Figma
+    variables feeding tokens, documented components, adopted across products), built
+    solo in about a month.
 
 ## 5. How he likes me to work
 
@@ -232,6 +254,29 @@ Companion docs: the full build contract lives in `docs/substrate-build-spec.md`.
     ABSOLUTE targets (not "-=") so they survive invalidateOnRefresh (lesson 17);
     read offsetHeight (not getBoundingClientRect) for layout measures that must
     ignore the live scale.
+21. Case-study content model. Project gained an optional `study` (CaseStudy): lede,
+    role, duration, metric, and optional loop / comparison / prototypeUrl /
+    before+after / gallery, plus sections. app/work/[slug]/page.tsx renders the rich
+    study when present and the old placeholder spine otherwise, so real content
+    lands one project at a time without touching the others. Project also gained
+    cover (card media image) and stack + stackLabel (a labelled tool or makeup line
+    on the card, e.g. "AI workflow: ChatGPT / Claude Code / Figma MCP").
+22. Cover art must fit the slot. The cinematic card cover is roughly SQUARE (the
+    left half at full card height), so generate cover illustrations at 1:1 and fill
+    with object-cover; a wide 16:10 image crops hard or letterboxes. An abstract
+    dark illustration blends into the dark card. Do not feed real UI to the image
+    model for a collage (it reads as slop): use either a real screenshot or a clean
+    abstract from a text prompt, on palette (void background, vellum and graphite,
+    one amber accent).
+23. Wide reference boards render full-width and uncropped. Design-system file grids,
+    foundations, and component sheets are wide and dense, so a small side-by-side is
+    illegible. Use a full-width captioned gallery (w-full, natural aspect, no
+    object-cover crop) so the scatter-to-order story reads. Reserve the side-by-side
+    before/after pair for clean, similar-aspect UI shots.
+24. Honesty, and the colleague-comparison risk. Lead with the honest claim, never a
+    fake-precise number. When the story compares to another designer's method, at a
+    current employer, in public, compare METHODS not people ("the conventional path"
+    vs "the path I run"), so it never reads as throwing a colleague under the bus.
 
 ## 7. Project conventions to remember
 
@@ -263,6 +308,13 @@ Companion docs: the full build contract lives in `docs/substrate-build-spec.md`.
   cinematic also keeps an in-stage grid as the reduced-motion-mid-session
   fallback. GSAP enters only via this code-split chunk, so the home First Load JS
   stays put (about 160 kB).
+- Case studies are real content now, filled one card at a time. Project carries an
+  optional `study` (CaseStudy) that app/work/[slug]/page.tsx renders; without it a
+  card falls back to the placeholder reading spine. #1 (reusely-design-workflow,
+  "Ways of Working") and #2 (reusely-design-system, "Design System") are real; the
+  rest stay mock. Card covers and evidence shots live in public/asset/project/
+  (square abstract illustrations or real screenshots); wide evidence boards use the
+  full-width gallery, while the clean before/after pair stays side-by-side.
 - Non-negotiables: full reduced-motion and no-WebGL fallbacks with byte-identical
   copy, keyboard-operable hero, WCAG AA, LCP under 2.5s with SSR text first,
   CLS near zero, motivated motion only, one theme (locked dark).
