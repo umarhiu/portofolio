@@ -10,6 +10,7 @@ import {
   useTransform,
 } from "motion/react";
 import { hero } from "@/lib/content";
+import { useHeroEntrance } from "./useHeroEntrance";
 
 /*
   The headline and its embedded retro controller, v2
@@ -73,13 +74,14 @@ export function HeroPlay() {
   const pausedRef = useRef(false);
   const suspend = useRef({ hidden: false, offscreen: false, press: false, kbFocus: false });
   const pendingHold = useRef(false); // a manual pick happened while suspended
+  const introReady = useRef(false);
   const clearTimer = () => {
     if (timer.current !== null) window.clearTimeout(timer.current);
     timer.current = null;
   };
   const canRun = () => {
     const s = suspend.current;
-    return !pausedRef.current && !s.hidden && !s.offscreen && !s.press && !s.kbFocus;
+    return introReady.current && !pausedRef.current && !s.hidden && !s.offscreen && !s.press && !s.kbFocus;
   };
   const schedule = (delay: number) => {
     clearTimer();
@@ -145,6 +147,19 @@ export function HeroPlay() {
     }
   }, [prefersReduced]);
 
+  useEffect(() => {
+    const release = () => {
+      introReady.current = true;
+      pointerInfluence.set(1);
+      onSuspendChange();
+    };
+    window.addEventListener("hero-intro-ready", release);
+    if (!window.__heroIntro || window.__heroIntro.state === "ready") release();
+    return () => window.removeEventListener("hero-intro-ready", release);
+    // The existing ref-based autoplay machine owns its one schedule.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Start/stop the cycle with mount + visibility + viewport presence.
   useEffect(() => {
     pausedRef.current = paused;
@@ -155,6 +170,7 @@ export function HeroPlay() {
       onSuspendChange();
     };
     document.addEventListener("visibilitychange", onVis);
+    suspend.current.hidden = document.hidden;
 
     let io: IntersectionObserver | null = null;
     if (shell && "IntersectionObserver" in window) {
@@ -230,11 +246,12 @@ export function HeroPlay() {
   // ---- Hero-wide pointer orientation (motion values, no re-renders) --------
   const nx = useMotionValue(0);
   const ny = useMotionValue(0);
-  const rx = useSpring(useTransform(ny, (v) => REST.x - v * RANGE.x), {
+  const pointerInfluence = useMotionValue(0);
+  const rx = useSpring(useTransform(() => REST.x - ny.get() * RANGE.x * pointerInfluence.get()), {
     stiffness: 130,
     damping: 19,
   });
-  const ry = useSpring(useTransform(nx, (v) => REST.y + v * RANGE.y), {
+  const ry = useSpring(useTransform(() => REST.y + nx.get() * RANGE.y * pointerInfluence.get()), {
     stiffness: 130,
     damping: 19,
   });
@@ -268,7 +285,7 @@ export function HeroPlay() {
     window.addEventListener("resize", refresh, { passive: true });
     window.addEventListener("scroll", refresh, { passive: true });
 
-    const onMove = (e: PointerEvent) => {
+    const onMove = (e: Pick<PointerEvent, "clientX" | "clientY" | "pointerType">) => {
       const t = trackingRef.current;
       if (!t.ok || !t.inView || t.frozen || document.hidden) return;
       if (e.pointerType !== "mouse") return;
@@ -289,16 +306,16 @@ export function HeroPlay() {
       ny.set(0);
     };
     window.addEventListener("pointermove", onMove, { passive: true });
+    if (window.__heroIntro?.pointer) onMove(window.__heroIntro.pointer);
     document.documentElement.addEventListener("pointerleave", onLeaveDoc);
 
     // Nav theme: white bar while the shell still overlaps the fixed nav.
     // Writes only on change so scroll ticks never dirty the style tree.
     const navTheme = () => {
       const light = shell.getBoundingClientRect().bottom > 64;
-      const cur = document.documentElement.dataset.navTheme === "light";
-      if (light === cur) return;
-      if (light) document.documentElement.dataset.navTheme = "light";
-      else delete document.documentElement.dataset.navTheme;
+      const theme = light ? "light" : "dark";
+      if (document.documentElement.dataset.navTheme === theme) return;
+      document.documentElement.dataset.navTheme = theme;
     };
     navTheme();
     window.addEventListener("scroll", navTheme, { passive: true });
@@ -318,12 +335,14 @@ export function HeroPlay() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useHeroEntrance();
+
   const caption = paused ? hero.captionPaused : hero.caption;
 
   return (
     <div className="hp-head" ref={headRef}>
       <h1 className="hp-h1">
-        <span className="hp-l1">
+        <span className="hp-l1" data-hero-enter="line-one">
           {hero.headline.prefix}{" "}
           <span className="hp-verb">
             {verbs.map((v) => (
@@ -337,13 +356,14 @@ export function HeroPlay() {
           </span>{" "}
           {hero.headline.afterVerb}
         </span>
-        <span className="hp-w">{hero.headline.line2[0]}</span>
-        <span className="hp-u">{hero.headline.line2[1]}</span>
+        <span className="hp-w" data-hero-enter="line-two">{hero.headline.line2[0]}</span>
+        <span className="hp-u" data-hero-enter="line-two">{hero.headline.line2[1]}</span>
       </h1>
 
       {/* The controller: sibling of the h1, placed into the slot. Decorative
           layers are aria-hidden; the native buttons are not. */}
       <div className="hp-ctrl-slot">
+        <div data-hero-enter="gamepad">
         <div className="hp-stage">
           <span className="hp-ground" aria-hidden="true" />
           <motion.div
@@ -393,8 +413,9 @@ export function HeroPlay() {
             </div>
           </motion.div>
         </div>
+        </div>
 
-        <div className="hp-caption-row" style={ready ? undefined : { opacity: 0 }}>
+        <div className="hp-caption-row" data-hero-enter="hint">
           <p id="hp-caption" className="hp-caption">
             {caption}
           </p>

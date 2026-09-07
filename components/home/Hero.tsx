@@ -1,15 +1,17 @@
 import { HeroStatic } from "@/components/home/HeroStatic";
+import { HeroTransition } from "@/components/home/HeroTransition";
 
 /*
   Server wrapper. The hero is one static-first composition (HeroStatic) whose
-  only client part is the small HeroPlay island (the verb-cycling controller),
+  interactive part is the small HeroPlay island (the verb-cycling controller),
   which SSRs its default state. No enhancer, no capability gate: the default
-  frame is the complete experience everywhere; the controller adds play on top.
+  frame is the complete experience everywhere; a separate decorative island
+  handles only the scroll-linked background handoff.
 */
 export function Hero() {
   return (
-    <section id="hero" aria-label="Introduction" className="relative">
+    <HeroTransition>
       <HeroStatic />
-    </section>
+    </HeroTransition>
   );
 }

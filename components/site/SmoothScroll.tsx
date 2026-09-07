@@ -103,6 +103,12 @@ export function SmoothScroll() {
           duration: 1.1,
           easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
           smoothWheel: true,
+          // The hero handoff tracks native scrolling without wheel smoothing.
+          // Keep the existing enhancement elsewhere on the site.
+          virtualScroll: () => {
+            const hero = document.getElementById("hero");
+            return !hero || hero.getBoundingClientRect().bottom <= 0;
+          },
         });
 
         const onLenisScroll = () => ScrollTrigger.update();

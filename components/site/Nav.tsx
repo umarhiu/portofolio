@@ -10,10 +10,11 @@ import { nav, site } from "@/lib/content";
   scrim composited to a washed #3c3d40, mismatching the ink-black sections
   above and below it. Over the dark rest of the site this is identical.
 */
-export function Nav() {
+export function Nav({ initialTheme = "dark" }: { initialTheme?: "light" | "dark" }) {
   return (
-    <header className="site-nav fixed inset-x-0 top-0 z-40 border-b border-hairline/60 bg-void/95 backdrop-blur-sm transition-colors duration-200">
+    <header data-initial-theme={initialTheme} className="site-nav fixed inset-x-0 top-0 z-40 border-b border-hairline/60 bg-void/95 backdrop-blur-sm transition-colors duration-200">
       <nav
+        data-hero-enter={initialTheme === "light" ? "nav" : undefined}
         aria-label="Primary"
         className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-4 sm:px-8"
       >

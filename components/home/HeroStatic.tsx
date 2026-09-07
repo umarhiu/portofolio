@@ -9,8 +9,7 @@ import { HeroPlay } from "@/components/hero/HeroPlay";
   frame is complete without JS or motion: headline "I design things worth
   using.", role, copy, and working navigation render immediately.
 
-  The section's white background lives on #hero in globals.css (it must stay
-  opaque there for the Positioning reveal that tucks beneath it).
+  The section's white background lives on #hero in globals.css.
 */
 export function HeroStatic() {
   return (
@@ -20,12 +19,13 @@ export function HeroStatic() {
     <div className="hero-play hero-shell relative flex flex-col items-center justify-center px-6 pb-8 pt-20 sm:px-12 lg:px-16">
       <div className="mx-auto w-full max-w-[1200px] text-center">
         <p className="mb-6 font-mono text-xs uppercase tracking-[0.22em] text-void/60 sm:mb-8">
-          {hero.identity}
+          <span data-hero-enter="identity" className="inline-block">{hero.identity}</span>
         </p>
 
         <HeroPlay />
 
         <p
+          data-hero-enter="description"
           className="mx-auto mt-7 max-w-[52ch] text-void/75 sm:mt-8"
           style={{ fontSize: "1.15rem", lineHeight: 1.6 }}
         >
@@ -36,12 +36,14 @@ export function HeroStatic() {
           {/* Equal widths when the pair stacks on narrow screens; natural
               widths side by side from sm up. */}
           <a
+            data-hero-enter="primary"
             href={hero.ctas.primary.href}
             className="inline-flex min-h-11 w-full max-w-[280px] items-center justify-center bg-void px-6 py-3 font-mono text-xs uppercase tracking-[0.18em] text-vellum transition-opacity duration-200 hover:opacity-85 sm:w-auto sm:max-w-none"
           >
             {hero.ctas.primary.label}
           </a>
           <a
+            data-hero-enter="secondary"
             href={hero.ctas.secondary.href}
             // border-void/50 = 3.6:1 on white, clearing the 3:1 non-text
             // minimum for the outline that identifies this button.

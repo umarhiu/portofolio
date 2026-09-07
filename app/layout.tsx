@@ -5,6 +5,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { site } from "@/lib/content";
 import { SmoothScroll } from "@/components/site/SmoothScroll";
 import "./globals.css";
+import { heroIntroBootstrap } from "@/lib/hero-intro-bootstrap";
 
 /*
   Display: Archivo as a variable font including the width (wdth) axis, driven
@@ -69,6 +70,9 @@ export default function RootLayout({
         className={`${display.variable} ${serif.variable} ${mono.variable}`}
         suppressHydrationWarning
       >
+        <head>
+          <script dangerouslySetInnerHTML={{ __html: heroIntroBootstrap }} />
+        </head>
         <body suppressHydrationWarning>
           {/* #main exists on every route, unlike the home-only #selected-work. */}
           <a

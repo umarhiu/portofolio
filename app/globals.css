@@ -150,25 +150,47 @@ html[data-work="cinematic"] .work-static {
   min-height: 100dvh;
 }
 
+/* Opt-in pre-paint enhancement only. No script / bypass / timeout = visible.
+   Only entrance-owned elements are faded; never the 3D rig or scroll mask. */
+html[data-hero-intro] [data-hero-enter] {
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+html[data-hero-intro] .site-nav {
+  border-color: transparent;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-hero-intro] [data-hero-enter] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 /* White opening screen: while the intro shell overlaps the nav, the hero
    island sets data-nav-theme="light" on <html> and the fixed bar goes white
-   with dark links. Removed again past the hero (and on unmount), so every
-   dark section and page keeps the dark bar. */
-html[data-nav-theme="light"] .site-nav {
+   with dark links. The homepage also supplies a server-rendered light default
+   for first paint; JS explicitly switches to dark past the hero. */
+html[data-nav-theme="light"] .site-nav,
+html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] {
   background-color: var(--color-paper);
   border-color: rgba(11, 13, 16, 0.1);
 }
-html[data-nav-theme="light"] .site-nav__mark {
+html[data-nav-theme="light"] .site-nav__mark,
+html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] .site-nav__mark {
   color: var(--color-void);
 }
-html[data-nav-theme="light"] .site-nav ul {
+html[data-nav-theme="light"] .site-nav ul,
+html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] ul {
   color: rgba(11, 13, 16, 0.65);
 }
-html[data-nav-theme="light"] .site-nav ul a:hover {
+html[data-nav-theme="light"] .site-nav ul a:hover,
+html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] ul a:hover {
   color: var(--color-void);
 }
 /* The amber focus ring is ~2.4:1 on the white bar; ink is ~19:1. */
-html[data-nav-theme="light"] .site-nav :focus-visible {
+html[data-nav-theme="light"] .site-nav :focus-visible,
+html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] :focus-visible {
   outline-color: var(--color-void);
 }
 
@@ -570,41 +592,41 @@ html:has(#hero) {
 }
 
 /* --- Stepped boundary into the next section -------------------------------- */
-/* Architectural step cap for the Positioning section: its dark background
-   rises highest in the center (y=0), one level lower at the shoulders (48px),
-   lowest at the outer edges (96px). White negative space above the steps is
-   painted by the cap wrapper, so no body color leaks through as a seam. The
-   cap lives in document flow immediately after the intro shell (app/page.tsx),
-   so native scroll brings the raised center in first from the viewport bottom
-   in every mode; placed inside the statement it would be swallowed by that
-   section's -100vh sticky tuck. clip-path stays on this decorative layer
-   only, never on content. */
-.statement-cap {
-  position: relative;
-  height: 96px;
-  background: var(--color-paper);
+/* The real next section sits beneath the five-strip cutout. The overlap is
+   fixed, not animated: scrolling never pushes content away or adds a track. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-reveal + .statement {
+    margin-top: -35dvh;
+    min-height: 100dvh;
+    padding-top: 3rem;
+  }
+  .hero-reveal + .statement .statement__inner {
+    padding-top: 0;
+  }
+  .statement.is-sticky::after {
+    content: "";
+    display: block;
+    height: 100dvh;
+  }
+  .statement.is-sticky .statement__inner {
+    position: sticky;
+    top: 4rem;
+    min-height: calc(100dvh - 4rem);
+    display: flex;
+    align-items: center;
+    padding-block: 2rem;
+  }
 }
-.statement-cap__step {
-  position: absolute;
-  inset: 0;
-  background: var(--color-void);
-  clip-path: polygon(
-    0% 100%,
-    20% 100%,
-    20% 50%,
-    40% 50%,
-    40% 0%,
-    60% 0%,
-    60% 50%,
-    80% 50%,
-    80% 100%,
-    100% 100%,
-    0% 100%
-  );
+.statement {
+  z-index: 1;
 }
-@media (max-width: 640px) {
-  .statement-cap {
-    height: 56px; /* same center/shoulder/edge structure, reduced height */
+/* A focused hero control must remain visible and keyboard-accessible. */
+.hero-reveal:has(:focus-visible) {
+  clip-path: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-reveal {
+    clip-path: none !important;
   }
 }
 
@@ -735,33 +757,7 @@ html:has(#hero) {
     }
   }
 
-  /* Sticky scroll-reveal statement. The tall track + sticky inner are added
-     by JS only when motion is allowed; the default is a normal short section
-     (no dead scroll) for reduced-motion and no-JS.
-
-     Reveal-from-behind: the statement is pulled up under the hero's last
-     screen (negative margin) and sits one layer below it (z-index). Because
-     the hero is opaque and stacks above, the pinned statement stays hidden
-     until the hero scrolls up and uncovers it, so the text appears to emerge
-     from behind the hero. The first 100vh of the track is this reveal; the
-     rest drives the word-by-word brighten. */
-  .statement.is-sticky {
-    position: relative;
-    z-index: 1;
-    height: 300vh;
-    margin-top: -100vh;
-  }
-  .statement.is-sticky .statement__inner {
-    position: sticky;
-    top: 0;
-    display: flex;
-    min-height: 100dvh;
-    align-items: center;
-  }
-  /* Opaque, raised hero so it masks the statement tucked behind it. Stays
-     well below the fixed nav (z-40). The hero canvas is white, a scoped
-     exception to the dark theme; opacity is what matters for the Positioning
-     reveal, and white is just as opaque as void. */
+  /* The hero remains a white, one-viewport composition below the fixed nav. */
   #hero {
     position: relative;
     z-index: 2;
