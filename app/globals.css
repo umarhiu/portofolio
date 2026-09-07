@@ -15,6 +15,17 @@
   --color-accent: #ff6a1a;
   --color-drafting: #3a5a78;
 
+  /* Hero-local palette (docs/portfolio-hero-brief.md): a white canvas with
+     near-black type (void reused as the ink role) and a red controller as the
+     focal accent. Scoped to the hero; the rest of the site stays dark. The
+     controller keeps its ivory faceplate, so the material contrast against
+     the red shell survives the brighter canvas. */
+  --color-paper: #ffffff;
+  --color-play-red: #c43a28;
+  --color-play-red-deep: #8e2417;
+  --color-play-face: #f9f4e7;
+  --color-play-dark: #26282e;
+
   --font-display: var(--font-archivo-expanded), "Arial Black", system-ui, sans-serif;
   --font-serif: var(--font-spectral), Georgia, "Times New Roman", serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", monospace;
@@ -93,58 +104,507 @@
   }
 }
 
-/* When the WebGL hero is active (decided pre-paint by an inline script in the
-   document, confirmed by React), hide the SSR static layout and reserve the
-   hero scroll track. This prevents a flash of the static hero on first paint
-   and prevents the hero from collapsing before the scene mounts. */
-html[data-hero="webgl"] .hero-static {
-  display: none;
+/* Lenis smooth scroll (components/site/SmoothScroll.tsx). These rules are inert
+   until Lenis adds its classes to <html> on a capable desktop, so mobile and
+   reduced-motion keep native scroll. The lenis-smooth rule also overrides the
+   base `scroll-behavior: smooth` while Lenis owns the scroll, so the two never
+   double-smooth a programmatic jump. */
+html.lenis,
+html.lenis body {
+  height: auto;
 }
-html[data-hero="webgl"] #hero {
-  min-height: 500dvh;
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
 }
 
-/* Same idea for the Selected Work index: when the capable-desktop GSAP
-   cinematic mounts (data-work set by WorkEnhancer), hide the static fallback
-   grid. The cinematic island provides its own 360dvh scroll track. */
+/* For the Selected Work index: when the capable-desktop GSAP cinematic mounts
+   (data-work set by WorkEnhancer), hide the static fallback grid. The
+   cinematic island provides its own 360dvh scroll track. */
 html[data-work="cinematic"] .work-static {
   display: none;
 }
 
-/* The scene fades in instead of popping once its chunk loads. */
-@keyframes hero-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-.hero-webgl {
-  animation: hero-fade-in 500ms var(--ease-out) both;
+/* ---------------------------------------------------------------------------
+   "A little play, serious craft" hero, v2 (components/home/HeroStatic.tsx +
+   components/hero/HeroPlay.tsx). Editorial headline on a pure white canvas
+   with a tactile retro controller embedded between the words: auto-rotating
+   verb, D-pad press-to-next, four diamond action buttons, hero-wide pointer
+   orientation. All hero styles are scoped under .hero-play.
+   See docs/portfolio-hero-brief-v2.md.
+--------------------------------------------------------------------------- */
+
+/* One-viewport intro shell: navigation height + hero = one screen. svh first
+   as the stable fallback, dvh preferred where supported. min-height (never
+   height) so short viewports, large text, and zoom grow instead of clipping. */
+.hero-shell {
+  min-height: 100svh;
+  min-height: 100dvh;
 }
 
-/* State-04 component holder (HeroBackgroundFolder) sits at top-[8%] with a fixed
-   pixel height, while the state-04 headline is anchored to bottom-[13vh]. On a
-   short laptop the holder's bottom (pocket + caption) drops into the headline.
-   Scaling from center-top means a smaller scale pulls the bottom up and clears
-   the text. Steps are sized so the holder bottom always stays above the headline. */
-.hero-folder-stage {
-  --folder-scale: 1.4;
+/* White opening screen: while the intro shell overlaps the nav, the hero
+   island sets data-nav-theme="light" on <html> and the fixed bar goes white
+   with dark links. Removed again past the hero (and on unmount), so every
+   dark section and page keeps the dark bar. */
+html[data-nav-theme="light"] .site-nav {
+  background-color: var(--color-paper);
+  border-color: rgba(11, 13, 16, 0.1);
 }
-@media (max-height: 900px) {
-  .hero-folder-stage {
-    --folder-scale: 1.18;
+html[data-nav-theme="light"] .site-nav__mark {
+  color: var(--color-void);
+}
+html[data-nav-theme="light"] .site-nav ul {
+  color: rgba(11, 13, 16, 0.65);
+}
+html[data-nav-theme="light"] .site-nav ul a:hover {
+  color: var(--color-void);
+}
+/* The amber focus ring is ~2.4:1 on the white bar; ink is ~19:1. */
+html[data-nav-theme="light"] .site-nav :focus-visible {
+  outline-color: var(--color-void);
+}
+
+/* The exposed page backing behind the opening screen (overscroll at the top)
+   is white on the home page only. body keeps painting the dark sections. */
+html:has(#hero) {
+  background-color: var(--color-paper);
+}
+
+/* Headline type: characterful grotesk, sentence case, tight but readable.
+   Archivo at near-normal width, deliberately NOT the all-caps wdth-115 poster
+   treatment the site's display class uses. */
+.hero-play .hp-h1 {
+  display: contents; /* the grid owns layout; the h1 keeps reading order */
+}
+.hero-play .hp-head {
+  display: grid;
+  grid-template-areas:
+    "l1 l1 l1"
+    "w  c  u";
+  grid-template-columns: auto auto auto;
+  justify-content: center;
+  align-items: center;
+  column-gap: clamp(14px, 2vw, 30px);
+  row-gap: clamp(2px, 0.6vw, 10px);
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 103;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+  font-size: clamp(2.75rem, 8vw, 7.75rem);
+  color: var(--color-void);
+}
+.hero-play .hp-l1 {
+  grid-area: l1;
+  text-align: center;
+}
+.hero-play .hp-w {
+  grid-area: w;
+}
+.hero-play .hp-u {
+  grid-area: u;
+}
+.hero-play .hp-ctrl-slot {
+  grid-area: c;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Mobile composition (the brief's stacked arrangement): headline, controller
+   on its own row, then "worth using." */
+@media (max-width: 767px) {
+  .hero-play .hp-head {
+    grid-template-areas:
+      "l1 l1"
+      "c  c"
+      "w  u";
+    grid-template-columns: auto auto;
+    column-gap: 0.32em;
+    row-gap: clamp(12px, 4vw, 22px);
+  }
+  .hero-play .hp-w {
+    justify-self: end;
+  }
+  .hero-play .hp-u {
+    justify-self: start;
   }
 }
-@media (max-height: 780px) {
-  .hero-folder-stage {
-    --folder-scale: 1.02;
+
+/* The rotating verb. All enabled labels are stacked invisibly in one inline
+   grid so the slot is ALWAYS as wide as the longest word: the layout can
+   never shift when the verb changes, at any breakpoint, with no JS measuring. */
+.hero-play .hp-verb {
+  display: inline-grid;
+  justify-items: center;
+}
+.hero-play .hp-verb > span {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+.hero-play .hp-verb__sizer {
+  visibility: hidden;
+}
+/* Animated only for changes after first paint (data-animate), so the default
+   verb renders instantly at load and under no-JS. Only the verb moves. */
+.hero-play .hp-verb__word[data-animate="true"] {
+  animation: hp-verb-in 240ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+@keyframes hp-verb-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
 }
-@media (max-height: 680px) {
-  .hero-folder-stage {
-    --folder-scale: 0.9;
+
+/* --- The controller, v2 --------------------------------------------------- */
+/* A small physical product: matte red molded shell with REAL extruded depth
+   (stacked slices, not a drop shadow), ivory inset faceplate, charcoal rubber
+   D-pad, four raised round action buttons in a diamond, one seam, a top-edge
+   highlight, and a ground shadow OUTSIDE the 3D model (filters on a
+   preserve-3d ancestor would flatten it). Orientation comes from the HeroPlay
+   island's motion values (hero-wide pointer tracking); the CSS transform below
+   is only the no-JS / pre-hydration resting pose. */
+.hero-play .hp-stage {
+  position: relative;
+  perspective: 800px;
+  padding-bottom: 18px; /* room for the ground shadow */
+}
+.hero-play .hp-ctrl {
+  position: relative;
+  width: clamp(240px, 19vw, 276px);
+  aspect-ratio: 2 / 1;
+  transform: rotateX(10deg) rotateY(-10deg) rotateZ(-5deg); /* resting pose */
+  transform-style: preserve-3d;
+}
+/* Ground shadow: sibling of the model (NOT inside it, its blur would flatten
+   preserve-3d). Warm-tinted so it reads as the object's own shade on white. */
+.hero-play .hp-ground {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  bottom: -2px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(58, 24, 18, 0.38) 0%,
+    rgba(58, 24, 18, 0.2) 45%,
+    transparent 72%
+  );
+  filter: blur(4px);
+  pointer-events: none;
+}
+/* The extrusion: stacked slices behind the top face give the shell a true
+   12-15px visible side when the object tilts, instead of a painted shadow.
+   Inset 0.5px so slice edges tuck behind the top face's antialiased outline
+   (no hairline seam ticks at the shell edges). */
+.hero-play .hp-ctrl__slice {
+  position: absolute;
+  inset: 0.5px;
+  border-radius: 17.5px;
+  background: var(--color-play-red-deep);
+}
+.hero-play .hp-ctrl__slice:nth-child(1) { transform: translateZ(-2.5px); }
+.hero-play .hp-ctrl__slice:nth-child(2) { transform: translateZ(-5px); }
+.hero-play .hp-ctrl__slice:nth-child(3) { transform: translateZ(-7.5px); }
+.hero-play .hp-ctrl__slice:nth-child(4) { transform: translateZ(-10px); background: #7c1f13; }
+.hero-play .hp-ctrl__slice:nth-child(5) { transform: translateZ(-12.5px); background: #6f1a10; }
+.hero-play .hp-ctrl__slice:nth-child(6) { transform: translateZ(-15px); background: #61150c; }
+/* Top face of the shell. */
+.hero-play .hp-ctrl__body {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: linear-gradient(
+    180deg,
+    #d8503a 0%,
+    var(--color-play-red) 16%,
+    var(--color-play-red) 70%,
+    #a72d1d 100%
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32); /* top-edge highlight */
+}
+/* One believable seam where the shell halves meet. */
+.hero-play .hp-ctrl__body::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  top: 66%;
+  height: 2px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.14));
+  border-radius: 1px;
+}
+/* Inset ivory faceplate, floated slightly for parallax under tilt. */
+.hero-play .hp-ctrl__face {
+  position: absolute;
+  inset: 11% 7% 15% 7%;
+  border-radius: 12px;
+  background: linear-gradient(180deg, var(--color-play-face), #efe8d5);
+  box-shadow:
+    inset 0 2px 4px rgba(11, 13, 16, 0.16),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.7);
+  transform: translateZ(4px);
+}
+
+/* The D-pad: ONE native button, one action (next verb). Raised off the face. */
+.hero-play .hp-dpad {
+  position: absolute;
+  left: 13%;
+  top: 50%;
+  transform: translateY(-50%) translateZ(9px);
+  transform-style: preserve-3d;
+  width: 64px;
+  height: 64px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 14px;
+  -webkit-tap-highlight-color: transparent;
+}
+.hero-play .hp-dpad:focus-visible {
+  outline: 2px solid var(--color-void);
+  outline-offset: 4px;
+}
+.hero-play .hp-cross {
+  position: absolute;
+  inset: 0;
+  display: block;
+  /* Release: short, controlled spring. Press overrides to a faster ease. */
+  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.hero-play .hp-cross i {
+  position: absolute;
+  display: block;
+  background: linear-gradient(180deg, #3a3d45, var(--color-play-dark) 55%, #1d1f24);
+  border-radius: 5px;
+  box-shadow:
+    0 2.5px 3px rgba(11, 13, 16, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+.hero-play .hp-cross .hp-cross-v {
+  left: 50%;
+  top: 6%;
+  width: 20px;
+  height: 88%;
+  transform: translateX(-50%);
+}
+.hero-play .hp-cross .hp-cross-h {
+  top: 50%;
+  left: 6%;
+  height: 20px;
+  width: 88%;
+  transform: translateY(-50%);
+}
+.hero-play .hp-cross .hp-cross-dot {
+  left: 50%;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 40% 35%, #16181c, #2e3138);
+  box-shadow: none;
+}
+/* Button travel: ~3px into the housing (along Z now), shadow tightens. */
+.hero-play .hp-dpad:active .hp-cross {
+  transform: translateZ(-3px);
+  transition-duration: 80ms;
+  transition-timing-function: ease-out;
+}
+.hero-play .hp-dpad:active .hp-cross i {
+  box-shadow:
+    0 1px 1px rgba(11, 13, 16, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Four real action buttons in a compact diamond (top design, right build,
+   bottom code, left ship). 44px circular hit areas, non-overlapping (adjacent
+   center distance >= 44 at every size); the 26px visual cap sits centered.
+   Hit areas live inside the tilting model, so they always match the pixels. */
+.hero-play .hp-cluster {
+  --hit: 44px;
+  --vo: 29px; /* vertical center offset */
+  --ho: 39px; /* horizontal center offset */
+  position: absolute;
+  right: 7%;
+  top: 50%;
+  transform: translateY(-50%) translateZ(9px);
+  transform-style: preserve-3d;
+  width: calc(2 * var(--ho) + var(--hit));
+  height: calc(2 * var(--vo) + var(--hit));
+}
+@media (max-width: 767px) {
+  .hero-play .hp-cluster {
+    --vo: 22px; /* shallower diamond so the cluster fits the mobile faceplate */
+  }
+}
+.hero-play .hp-act {
+  position: absolute;
+  width: var(--hit);
+  height: var(--hit);
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 9999px;
+  -webkit-tap-highlight-color: transparent;
+  transform-style: preserve-3d;
+}
+.hero-play .hp-act[data-pos="top"]    { left: var(--ho); top: 0; }
+.hero-play .hp-act[data-pos="right"]  { left: calc(2 * var(--ho)); top: var(--vo); }
+.hero-play .hp-act[data-pos="bottom"] { left: var(--ho); top: calc(2 * var(--vo)); }
+.hero-play .hp-act[data-pos="left"]   { left: 0; top: var(--vo); }
+.hero-play .hp-act:focus-visible {
+  outline: 2px solid var(--color-void);
+  outline-offset: 2px;
+}
+.hero-play .hp-act__cap {
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 38% 30%, #40434b, var(--color-play-dark) 55%, #17191d);
+  box-shadow:
+    0 3px 4px rgba(11, 13, 16, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  transform: translateZ(3px);
+  /* Same press physics as the D-pad: fast in, controlled spring out. */
+  transition:
+    transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* Independent press depth per button. */
+.hero-play .hp-act:active .hp-act__cap {
+  transform: translateZ(0px);
+  box-shadow:
+    0 1px 1.5px rgba(11, 13, 16, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition-duration: 80ms;
+  transition-timing-function: ease-out;
+}
+/* Active mode: a restrained ivory rim, updated by autoplay too (feedback only,
+   never a simulated press). */
+.hero-play .hp-act[data-active="true"] .hp-act__cap {
+  box-shadow:
+    0 0 0 2px rgba(249, 244, 231, 0.95),
+    0 3px 4px rgba(11, 13, 16, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+/* Caption + pause control, outside the faceplate, under the object. */
+.hero-play .hp-caption-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+.hero-play .hp-caption {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  /* 0.7 alpha on white = 7.4:1, comfortably past WCAG AA for small text. */
+  color: rgba(11, 13, 16, 0.7);
+}
+.hero-play .hp-pause {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  border: 1px solid rgba(11, 13, 16, 0.45);
+  background: transparent;
+  color: rgba(11, 13, 16, 0.7);
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 160ms var(--ease-out), color 160ms var(--ease-out);
+}
+.hero-play .hp-pause:hover {
+  border-color: var(--color-void);
+  color: var(--color-void);
+}
+.hero-play .hp-pause:focus-visible {
+  outline: 2px solid var(--color-void);
+  outline-offset: 3px;
+}
+@media (pointer: coarse) {
+  .hero-play .hp-pause {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* The site-wide amber focus ring measures ~2.4:1 on white; ink is ~19:1.
+   Scoped so the dark remainder of the site keeps its amber ring. */
+.hero-play :focus-visible {
+  outline-color: var(--color-void);
+}
+
+/* Reduced motion: no pointer tilt (the island also gates its listeners), no
+   verb slide, no springs. The verb swaps instantly; the dimensional resting
+   pose stays (it is a static appearance, not motion); press and focus
+   feedback stay as immediate static states. */
+@media (prefers-reduced-motion: reduce) {
+  /* Must out-specify the [data-animate="true"] rule that arms the entrance. */
+  .hero-play .hp-verb__word[data-animate="true"],
+  .hero-play .hp-verb__word {
+    animation: none;
+  }
+  .hero-play .hp-cross,
+  .hero-play .hp-act__cap,
+  .hero-play .hp-pause {
+    transition: none;
+  }
+}
+
+/* --- Stepped boundary into the next section -------------------------------- */
+/* Architectural step cap for the Positioning section: its dark background
+   rises highest in the center (y=0), one level lower at the shoulders (48px),
+   lowest at the outer edges (96px). White negative space above the steps is
+   painted by the cap wrapper, so no body color leaks through as a seam. The
+   cap lives in document flow immediately after the intro shell (app/page.tsx),
+   so native scroll brings the raised center in first from the viewport bottom
+   in every mode; placed inside the statement it would be swallowed by that
+   section's -100vh sticky tuck. clip-path stays on this decorative layer
+   only, never on content. */
+.statement-cap {
+  position: relative;
+  height: 96px;
+  background: var(--color-paper);
+}
+.statement-cap__step {
+  position: absolute;
+  inset: 0;
+  background: var(--color-void);
+  clip-path: polygon(
+    0% 100%,
+    20% 100%,
+    20% 50%,
+    40% 50%,
+    40% 0%,
+    60% 0%,
+    60% 50%,
+    80% 50%,
+    80% 100%,
+    100% 100%,
+    0% 100%
+  );
+}
+@media (max-width: 640px) {
+  .statement-cap {
+    height: 56px; /* same center/shoulder/edge structure, reduced height */
   }
 }
 
@@ -299,12 +759,13 @@ html[data-work="cinematic"] .work-static {
     align-items: center;
   }
   /* Opaque, raised hero so it masks the statement tucked behind it. Stays
-     well below the fixed nav (z-40). Only matters when the statement runs its
-     sticky reveal; harmless otherwise since the page is already void. */
+     well below the fixed nav (z-40). The hero canvas is white, a scoped
+     exception to the dark theme; opacity is what matters for the Positioning
+     reveal, and white is just as opaque as void. */
   #hero {
     position: relative;
     z-index: 2;
-    background-color: var(--color-void);
+    background-color: var(--color-paper);
   }
 
   /* Navbar 3D roll: on hover/focus the label flips on the X axis and a
@@ -342,64 +803,6 @@ html[data-work="cinematic"] .work-static {
     }
   }
 
-  /* Hero state rail. The active state (driven by scroll progress) and any
-     hovered/focused state extend their tick and turn amber. */
-  .hero-rail__btn {
-    color: var(--color-graphite);
-    transition: color 220ms var(--ease-out);
-  }
-  .hero-rail__tick {
-    display: inline-block;
-    height: 1px;
-    width: 28px;
-    transform: scaleX(0.43);
-    transform-origin: left center;
-    background-color: var(--color-hairline);
-    transition:
-      transform 220ms var(--ease-out),
-      background-color 220ms var(--ease-out);
-  }
-  .hero-rail__btn[data-active="true"] {
-    color: var(--color-vellum);
-  }
-  .hero-rail__btn[data-active="true"] .hero-rail__tick {
-    transform: scaleX(1);
-    background-color: var(--color-accent);
-  }
-  .hero-rail__btn:focus-visible {
-    color: var(--color-vellum);
-  }
-  .hero-rail__btn:focus-visible .hero-rail__tick {
-    transform: scaleX(1);
-    background-color: var(--color-accent);
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .hero-rail__btn:hover {
-      color: var(--color-vellum);
-    }
-    .hero-rail__btn:hover .hero-rail__tick {
-      transform: scaleX(1);
-      background-color: var(--color-accent);
-    }
-    .hero-rail--on-light .hero-rail__btn:hover {
-      color: var(--color-void);
-    }
-  }
-  /* Light surface (e.g. state 05 / vellum): flip the rail to dark for contrast. */
-  .hero-rail--on-light .hero-rail__btn {
-    color: rgba(11, 13, 16, 0.5);
-  }
-  .hero-rail--on-light .hero-rail__btn[data-active="true"],
-  .hero-rail--on-light .hero-rail__btn:focus-visible {
-    color: var(--color-void);
-  }
-  .hero-rail--on-light .hero-rail__tick {
-    background-color: rgba(11, 13, 16, 0.28);
-  }
-  .hero-rail--on-light .hero-rail__btn[data-active="true"] .hero-rail__tick,
-  .hero-rail--on-light .hero-rail__btn:focus-visible .hero-rail__tick {
-    background-color: var(--color-accent);
-  }
 }
 
 /* Premium page transitions (next-view-transitions). Disabled under reduced

@@ -1,16 +1,15 @@
 import { HeroStatic } from "@/components/home/HeroStatic";
-import { HeroEnhancer } from "@/components/hero/HeroEnhancer";
 
 /*
-  Server wrapper. The static hero renders for first paint (LCP) and for every
-  fallback path. The enhancer is a client island that, only on a capable
-  desktop, mounts the WebGL delamination scene and hides the static layout.
+  Server wrapper. The hero is one static-first composition (HeroStatic) whose
+  only client part is the small HeroPlay island (the verb-cycling controller),
+  which SSRs its default state. No enhancer, no capability gate: the default
+  frame is the complete experience everywhere; the controller adds play on top.
 */
 export function Hero() {
   return (
     <section id="hero" aria-label="Introduction" className="relative">
       <HeroStatic />
-      <HeroEnhancer />
     </section>
   );
 }

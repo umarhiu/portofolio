@@ -255,11 +255,11 @@ export default async function CaseStudyPage({
               {project.study.prototypeUrl ? (
                 <section className="mt-14">
                   <p className="font-mono text-xs uppercase tracking-[0.16em] text-graphite">
-                    The prototype
+                    {project.study.prototypeLabel ?? "The prototype"}
                   </p>
                   <p className="mt-2 text-vellum/70">
-                    The widget built in Claude Code: clickable, running the real
-                    logic. Open it live.
+                    {project.study.prototypeNote ??
+                      "The widget built in Claude Code: clickable, running the real logic. Open it live."}
                   </p>
                   <a
                     href={project.study.prototypeUrl}
@@ -267,7 +267,7 @@ export default async function CaseStudyPage({
                     rel="noreferrer"
                     className="mt-5 inline-flex items-center gap-2 border border-vellum/30 px-5 py-3 font-mono text-xs uppercase tracking-widest text-vellum transition-colors duration-200 hover:border-accent hover:bg-accent hover:text-void"
                   >
-                    Open the live prototype
+                    {project.study.prototypeCta ?? "Open the live prototype"}
                     <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden="true" />
                   </a>
                 </section>
@@ -289,6 +289,47 @@ export default async function CaseStudyPage({
                       </figcaption>
                     </figure>
                   ))}
+                </section>
+              ) : null}
+
+              {project.study.beforeAfters ? (
+                <section className="mt-14">
+                  <p className="font-mono text-xs uppercase tracking-[0.16em] text-graphite">
+                    Before and after
+                  </p>
+                  <div className="mt-6 space-y-10">
+                    {project.study.beforeAfters.map((screen) => (
+                      <div key={screen.label}>
+                        <p className="font-mono text-xs uppercase tracking-[0.18em] text-vellum/70">
+                          {screen.label}
+                        </p>
+                        <div className="mt-3 grid gap-4 md:grid-cols-2">
+                          {[
+                            { l: "Before", s: screen.before },
+                            { l: "After", s: screen.after },
+                          ].map((shot) => (
+                            <figure key={shot.l}>
+                              <div
+                                className="overflow-hidden border border-hairline bg-[rgba(236,231,221,0.02)]"
+                                style={{ aspectRatio: "16 / 10" }}
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={shot.s}
+                                  alt={`${screen.label} ${shot.l.toLowerCase()} the rebrand`}
+                                  className="h-full w-full object-cover object-top"
+                                  loading="lazy"
+                                />
+                              </div>
+                              <figcaption className="mt-2 font-mono text-[11px] uppercase tracking-[0.18em] text-graphite">
+                                {shot.l}
+                              </figcaption>
+                            </figure>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </section>
               ) : null}
 

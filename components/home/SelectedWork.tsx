@@ -9,8 +9,8 @@ import { ProjectCard } from "@/components/work/ProjectCard";
   The static, fully-accessible work index. This is the SSR / mobile / no-JS /
   reduced-motion experience and the fallback the desktop cinematic replaces.
   When the capable-desktop island mounts, WorkEnhancer sets data-work and CSS
-  hides this subtree (.work-static), exactly as the WebGL hero hides
-  .hero-static. The owning <section id="selected-work"> lives in WorkSection.
+  hides this subtree (.work-static). The owning <section id="selected-work">
+  lives in WorkSection.
 */
 
 type Filter = "All" | ProjectType;

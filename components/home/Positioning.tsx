@@ -103,9 +103,7 @@ export function Positioning() {
     <section
       ref={root}
       aria-label="Positioning"
-      className={
-        "statement relative border-t border-hairline" + (active ? " is-sticky" : "")
-      }
+      className={"statement relative" + (active ? " is-sticky" : "")}
     >
       <div className="statement__inner px-4 py-28 sm:px-8 lg:px-20 lg:py-40">
         <motion.div

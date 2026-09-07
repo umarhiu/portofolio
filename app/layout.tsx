@@ -3,6 +3,7 @@ import { Archivo, Spectral, JetBrains_Mono } from "next/font/google";
 import { ViewTransitions } from "next-view-transitions";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { site } from "@/lib/content";
+import { SmoothScroll } from "@/components/site/SmoothScroll";
 import "./globals.css";
 
 /*
@@ -69,23 +70,15 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <body suppressHydrationWarning>
-          {/* Pre-paint renderer decision (no-flash). Mirrors detectRenderer in
-              lib/hero/capability.ts. Runs before the hero is parsed, so capable
-              desktops never paint the static hero. Bots and non-capable devices
-              skip this and keep the SSR static hero (good for SEO and LCP). */}
-          <script
-            dangerouslySetInnerHTML={{
-              __html:
-                "(function(){try{var m=window.matchMedia;var reduce=m&&m('(prefers-reduced-motion: reduce)').matches;var fine=m&&m('(pointer: fine)').matches;var wide=m&&m('(min-width: 1024px)').matches;var gl=false;try{gl=!!document.createElement('canvas').getContext('webgl2');}catch(e){}var cores=navigator.hardwareConcurrency||4;if(!reduce&&gl&&fine&&wide&&cores>=4){document.documentElement.setAttribute('data-hero','webgl');}}catch(e){}})();",
-            }}
-          />
+          {/* #main exists on every route, unlike the home-only #selected-work. */}
           <a
-            href="#selected-work"
+            href="#main"
             className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-accent focus:px-4 focus:py-2 focus:font-mono focus:text-sm focus:uppercase focus:tracking-wider focus:text-void"
           >
-            Skip to selected work
+            Skip to content
           </a>
           {children}
+          <SmoothScroll />
           <SpeedInsights />
         </body>
       </html>

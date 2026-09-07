@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 
 /*
-  Mirrors HeroEnhancer. On a capable desktop only, code-split + mount the GSAP
-  "Selected Work" cinematic and hide the static grid (via data-work, like
-  data-hero). Keeps GSAP out of the home First Load JS: it ships only inside
+  On a capable desktop only, code-split + mount the GSAP "Selected Work"
+  cinematic and hide the static grid (via data-work).
+  Keeps GSAP out of the home First Load JS: it ships only inside
   this dynamically imported, never-SSR'd chunk. The 360dvh track height is
   reserved by the loading skeleton so the swap causes no layout jump.
 */
