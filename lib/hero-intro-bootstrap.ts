@@ -20,7 +20,10 @@ export const heroIntroBootstrap = String.raw`(() => {
       clearTimeout(timer);
       try { if (intro.cancel) intro.cancel(); } catch (_) {}
       intro.cancel = null;
-      const clearStyles = () => document.querySelectorAll('[data-hero-enter]').forEach(el => {
+      // Letters are included: a text group reveals its own [data-reveal-letter]
+      // spans, so a bypassed intro must clear their inline styles too or the
+      // words would stay invisible after the fail-open.
+      const clearStyles = () => document.querySelectorAll('[data-hero-enter], [data-reveal-letter]').forEach(el => {
         el.style.removeProperty('opacity');
         el.style.removeProperty('transform');
         el.style.removeProperty('clip-path');

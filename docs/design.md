@@ -169,6 +169,48 @@ Custom easings, because the built-in ones are too weak. Defined in `@layer base`
 - **Scroll choreography**: GSAP + ScrollTrigger drive scrubbed timelines. Pinning is
   done with CSS `position: sticky`, never ScrollTrigger `pin: true`. The "reveal from
   behind" statement and the Selected Work cinematic are the two set pieces.
+- **Fluid cursor**: a precise dot on the pointer plus a ring that trails it on a
+  spring and stretches along its own direction of travel. Near something
+  interactive the ring turns magnetic. See the section below.
+
+### Fluid interaction cursor
+
+`components/site/FluidCursor.tsx` gates it; `lib/fluid-cursor.ts` is the engine,
+dynamically imported so it never enters the initial bundle. Three states, picked
+from the target's measured size:
+
+| State  | When                                              | Ring                                        |
+| ------ | ------------------------------------------------- | ------------------------------------------- |
+| `free` | nothing interactive under the pointer             | 34px disc, trails and stretches with speed  |
+| `lock` | target at most 96px in both axes, not `soft`      | morphs into the element's box + 10px pad    |
+| `grow` | larger target, or inside `[data-cursor="soft"]`   | 60px disc, heavier spring, follows pointer  |
+
+Authoring hooks, all opt-in from markup:
+
+- `data-cursor="none"` excludes a subtree entirely.
+- `data-cursor="soft"` keeps the swell but suppresses the box. On the hero
+  controller, because an axis-aligned rectangle over a perspective-tilted 3D
+  object reads as pasted on.
+- `data-cursor="magnetic"` makes a non-interactive element a target. Links,
+  buttons, `[role="button"]`, `summary` and labelled `label`s are already
+  targets, so cards need nothing.
+
+Two rules to keep if you touch the CSS:
+
+- The three layers are **body children, never wrapped**. `mix-blend-mode` only
+  blends inside the nearest ancestor stacking context, so a fixed z-indexed
+  wrapper would leave them blending against each other rather than the page.
+  For the same reason none of them may gain an ancestor with `opacity`, a
+  filter, or a blend mode.
+- `transform-origin: 0 0` is load-bearing. Each layer is positioned by a
+  transform chain ending in `translate(-50%, -50%)`, and the default 50% 50%
+  origin would rotate that centering shift along with the box.
+
+One white cursor covers both regimes through `mix-blend-mode: exclusion`: it
+resolves near-black on the white hero and near-white on the dark page, measured
+at 19.9:1 and 17.6:1 against their backdrops, and 13.9:1 over a project cover.
+A backdrop at almost exactly 50% grey is the degenerate case for any inverting
+blend, which is what the ring's `backdrop-filter: contrast()` mitigates.
 
 ### Reduced motion (hard contract)
 
@@ -189,8 +231,13 @@ non-broken experience.
 - **Hover gating**: all hover affordances are wrapped in
   `@media (hover: hover) and (pointer: fine)` so touch devices do not get stuck
   hover states.
+- **Cursor**: the native cursor is hidden only while the fluid cursor is actually
+  mounted (`html[data-fluid-cursor="on"]`), and text entry keeps its I-beam. If
+  the engine chunk fails to load, nothing sets the attribute and the page keeps
+  its ordinary cursor rather than having none.
 - **Forced colors**: under `forced-colors: active`, the system owns color and focus
-  falls back to `CanvasText`.
+  falls back to `CanvasText`. The fluid cursor stands down completely there,
+  since a blended white overlay can resolve to nothing.
 - **Skip link**: a visually-hidden "skip to selected work" link appears on focus.
 
 ---

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 
 /** Five bottom-anchored reveal strips cut away the white hero, exposing the
@@ -8,7 +8,16 @@ import { motion, useReducedMotion, useScroll, useTransform } from "motion/react"
  */
 export function HeroTransition({ children }: { children: ReactNode }) {
   const layer = useRef<HTMLElement>(null);
-  const reduce = useReducedMotion();
+  // The reduce flag is deferred to after mount: useReducedMotion() is null
+  // during SSR, so branching this SSR-rendered style prop on it directly made
+  // the server markup (the polygon) disagree with a reduced-motion client's
+  // first render ("none"), which React reports as a hydration mismatch. At
+  // progress 0 the polygon is a full rectangle, so deferring costs nothing
+  // visually.
+  const prefersReduced = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const reduce = mounted && prefersReduced;
   const { scrollYProgress } = useScroll({
     target: layer,
     // Layer spans the hero; finish while its bottom is still on screen.

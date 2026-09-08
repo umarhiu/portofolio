@@ -1,5 +1,6 @@
 import { hero } from "@/lib/content";
 import { HeroPlay } from "@/components/hero/HeroPlay";
+import { TextReveal } from "@/components/ui/text-reveal-animation";
 
 /*
   "A little play, serious craft": one centered editorial composition on a
@@ -17,6 +18,14 @@ export function HeroStatic() {
     // the svh/dvh min-height). Content-safe: it grows at short heights or
     // zoom instead of clipping.
     <div className="hero-play hero-shell relative flex flex-col items-center justify-center px-6 pb-8 pt-20 sm:px-12 lg:px-16">
+      {/* Without JS the controller's buttons are inert (they render disabled),
+          so they must not look pressable. Scoped to <noscript> rather than
+          :disabled so that the sub-second pre-hydration window does not flash
+          a dimmed controller for everyone else. */}
+      <noscript>
+        <style>{`.hero-play .hp-dpad,.hero-play .hp-act{opacity:.5;cursor:default}`}</style>
+      </noscript>
+
       <div className="mx-auto w-full max-w-[1200px] text-center">
         <p className="mb-6 font-mono text-xs uppercase tracking-[0.22em] text-void/60 sm:mb-8">
           <span data-hero-enter="identity" className="inline-block">{hero.identity}</span>
@@ -26,10 +35,11 @@ export function HeroStatic() {
 
         <p
           data-hero-enter="description"
+          data-hero-reveal="letters"
           className="mx-auto mt-7 max-w-[52ch] text-void/75 sm:mt-8"
           style={{ fontSize: "1.15rem", lineHeight: 1.6 }}
         >
-          {hero.support}
+          <TextReveal text={hero.support} />
         </p>
 
         <div className="mt-7 flex flex-wrap items-center justify-center gap-4 sm:mt-8">

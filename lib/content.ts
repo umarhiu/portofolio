@@ -62,13 +62,6 @@ export const hero = {
     primary: { label: "Explore my work", href: "/#selected-work" },
     secondary: { label: "Let's talk", href: "/#contact" },
   },
-  // v2 (docs/portfolio-hero-brief-v2.md): the headline auto-rotates; the
-  // caption states which mode the rotation is in, and the pause control's
-  // accessible label flips with it.
-  caption: "Auto-rotating. Press to choose.",
-  captionPaused: "Paused. Press to choose.",
-  pauseLabel: "Pause word rotation",
-  resumeLabel: "Resume word rotation",
 } as const;
 
 export type Depth = "DEEP DIVE" | "BRIEF";

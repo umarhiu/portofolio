@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { animate } from "motion/react";
+import { animate, stagger } from "motion/react";
 
 declare global {
   interface Window {
@@ -16,22 +16,74 @@ declare global {
   }
 }
 
-// Sequential stages: identity 0–1.15, then one new group at a time. These
-// durations also determine the independent watchdog; there is no old 1.8s cap.
+/*
+  Sequential stages: identity 0 to 1.15, then one group at a time. A beat may
+  hold several groups, which run concurrently: the nav rides with the gamepad
+  so the bar and the controller arrive together.
+
+  Text groups reveal letter by letter, staggered by index (see
+  components/ui/text-reveal-animation.tsx). Their letters are animated in a
+  single Motion call per beat, so a beat's real length is its duration plus the
+  last letter's delay. The watchdog is computed from the live letter counts
+  below, or it would cut the longest reveal short.
+*/
 const IDENTITY = { appear: 0.3, hold: 0.3, dock: 0.55 };
-const BEATS = [
-  { name: "gamepad", duration: 0.45, from: "translateY(24px) scale(0.94) rotate(-5deg)" },
-  { name: "line-one", duration: 0.35, from: "translateY(22px)" },
-  { name: "line-two", duration: 0.3, from: "translateY(22px)" },
-  { name: "description", duration: 0.3, from: "translateY(10px)" },
-  { name: "primary", duration: 0.2, from: "translateY(8px)" },
-  { name: "secondary", duration: 0.2, from: "translateY(8px)" },
-  { name: "hint", duration: 0.15, from: "translateY(0px)" },
-  { name: "nav", duration: 0.3, from: "translateY(-8px)" },
-] as const;
-const DURATION_MS = Math.round((Object.values(IDENTITY).reduce((a, b) => a + b, 0)
-  + BEATS.reduce((sum, beat) => sum + beat.duration, 0)) * 1000);
+
+type Group = { name: string; from: string; to?: string };
+type Beat = {
+  duration: number;
+  groups: Group[];
+  /** Per-letter stagger, seconds. Set for text groups only. */
+  stagger?: number;
+};
+
+const RISE = "translateY(22px)";
+const FLAT = "translateY(0px)";
+// Letters rise in em so the distance scales with each element's type size.
+const LETTER_RISE = "translateY(0.45em)";
+const LETTER_FLAT = "translateY(0em)";
+
+const BEATS: Beat[] = [
+  {
+    duration: 0.45,
+    groups: [
+      { name: "gamepad", from: "translateY(24px) scale(0.94) rotate(-5deg)", to: "translateY(0px) scale(1) rotate(0deg)" },
+      // Concurrent with the controller, not trailing the whole intro.
+      { name: "nav", from: "translateY(-8px)" },
+    ],
+  },
+  { duration: 0.3, stagger: 0.028, groups: [{ name: "line-one", from: LETTER_RISE, to: LETTER_FLAT }] },
+  { duration: 0.3, stagger: 0.028, groups: [{ name: "line-two", from: LETTER_RISE, to: LETTER_FLAT }] },
+  // ~110 characters, so the stagger is small enough to read as one sweep.
+  { duration: 0.26, stagger: 0.006, groups: [{ name: "description", from: LETTER_RISE, to: LETTER_FLAT }] },
+  { duration: 0.2, groups: [{ name: "primary", from: "translateY(8px)" }] },
+  { duration: 0.2, groups: [{ name: "secondary", from: "translateY(8px)" }] },
+];
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
+
+// A text beat animates the letters inside its group; everything else animates
+// the group elements themselves.
+function targetsFor(beat: Beat, group: Group): HTMLElement[] {
+  const scope = `[data-hero-enter="${group.name}"]`;
+  const selector = beat.stagger === undefined ? scope : `${scope} [data-reveal-letter]`;
+  return Array.from(document.querySelectorAll<HTMLElement>(selector));
+}
+
+/** Real wall-clock length, including each text beat's last letter delay. */
+function measureDuration(): number {
+  const seconds = Object.values(IDENTITY).reduce((a, b) => a + b, 0)
+    + BEATS.reduce((sum, beat) => {
+      const longest = Math.max(
+        ...beat.groups.map(group => {
+          const count = targetsFor(beat, group).length;
+          return beat.stagger && count > 1 ? (count - 1) * beat.stagger : 0;
+        }),
+        0,
+      );
+      return sum + beat.duration + longest;
+    }, 0);
+  return Math.round(seconds * 1000);
+}
 
 export function useHeroEntrance() {
   useEffect(() => {
@@ -68,7 +120,7 @@ export function useHeroEntrance() {
         const x = viewport.left + viewport.width / 2 - (label.left + label.width / 2);
         const y = window.innerHeight / 2 - (label.top + label.height / 2);
         const centered = `translate(${x}px, ${y}px) scale(1.12)`;
-        if (!intro!.start(DURATION_MS)) return;
+        if (!intro!.start(measureDuration())) return;
         owned = true;
         intro!.cancel = () => controls?.stop();
         controls = animate(identity, {
@@ -89,19 +141,29 @@ export function useHeroEntrance() {
         if (!running()) return;
 
         for (const beat of BEATS) {
-          const elements = Array.from(document.querySelectorAll<HTMLElement>(`[data-hero-enter="${beat.name}"]`));
-          const text = beat.name === "line-one" || beat.name === "line-two";
-          controls = animate(elements, {
-            opacity: [0, 1],
-            transform: [beat.from, beat.name === "gamepad"
-              ? "translateY(0px) scale(1) rotate(0deg)" : "translateY(0px)"],
-            ...(text ? { clipPath: ["inset(0px -4px 100% -4px)", "inset(-4px -4px -4px -4px)"] } : {}),
-          }, { duration: beat.duration, ease: EASE_OUT });
-          await controls;
+          // Every group in a beat plays at once; the beat ends with the last.
+          const plays = beat.groups.map(group => {
+            const targets = targetsFor(beat, group);
+            if (!targets.length) return null;
+            return animate(targets, {
+              opacity: [0, 1],
+              transform: [group.from, group.to ?? FLAT],
+            }, {
+              duration: beat.duration,
+              ease: EASE_OUT,
+              ...(beat.stagger ? { delay: stagger(beat.stagger) } : {}),
+            });
+          }).filter(Boolean) as ReturnType<typeof animate>[];
+          controls = plays[0];
+          intro!.cancel = () => plays.forEach(play => play.stop());
+          await Promise.all(plays);
           if (!running()) return;
           // Make a group interactive only once it is visible. Keyboard focus
           // still uses the bootstrap's synchronous finish handler at any time.
-          elements.forEach(element => { element.style.pointerEvents = "auto"; });
+          beat.groups.forEach(group => {
+            document.querySelectorAll<HTMLElement>(`[data-hero-enter="${group.name}"]`)
+              .forEach(element => { element.style.pointerEvents = "auto"; });
+          });
         }
         if (running()) intro!.finish();
       } catch {

@@ -157,14 +157,46 @@ html[data-hero-intro] [data-hero-enter] {
   pointer-events: none;
   will-change: transform, opacity;
 }
+/* Text groups reveal letter by letter, so the CONTAINER stays visible and the
+   letters are what start hidden. Without this the container would fade as one
+   block and the per-letter stagger would be invisible inside it. */
+html[data-hero-intro] [data-hero-enter][data-hero-reveal="letters"] {
+  opacity: 1;
+}
+/* No will-change here on purpose: transform and opacity are composited
+   without the hint, and promoting all ~100 letters for the whole intro made
+   them render with greyscale antialiasing that visibly snapped back to
+   subpixel the moment the intro ended. */
+html[data-hero-intro] [data-hero-enter][data-hero-reveal="letters"] [data-reveal-letter] {
+  opacity: 0;
+}
 html[data-hero-intro] .site-nav {
   border-color: transparent;
 }
 @media (prefers-reduced-motion: reduce) {
-  html[data-hero-intro] [data-hero-enter] {
+  html[data-hero-intro] [data-hero-enter],
+  html[data-hero-intro] [data-hero-enter] [data-reveal-letter] {
     opacity: 1 !important;
     transform: none !important;
   }
+}
+
+/* Text reveal structure (components/ui/text-reveal-animation.tsx). Letters are
+   inline-block so they can be transformed; each word is a nowrap box so a line
+   can only break between words, never mid-word. */
+.hp-reveal,
+.hp-reveal__words {
+  display: inline;
+}
+.hp-reveal__word {
+  display: inline-block;
+  white-space: nowrap;
+}
+.hp-reveal__letter {
+  display: inline-block;
+}
+.hp-reveal__space {
+  white-space: pre-wrap;
 }
 
 /* White opening screen: while the intro shell overlaps the nav, the hero
@@ -261,32 +293,33 @@ html:has(#hero) {
   }
 }
 
-/* The rotating verb. All enabled labels are stacked invisibly in one inline
-   grid so the slot is ALWAYS as wide as the longest word: the layout can
-   never shift when the verb changes, at any breakpoint, with no JS measuring. */
-.hero-play .hp-verb {
-  display: inline-grid;
-  justify-items: center;
+/* The rotating verb, driven by components/ui/text-rotate.tsx (shadcn
+   TextRotate). The component brings its own flex/whitespace utilities via cn;
+   these rules only supply the mask and the line-one flow that lets the
+   neighbouring words slide when the word width changes. */
+.hero-play .hp-l1__flow {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.26em;
 }
-.hero-play .hp-verb > span {
-  grid-area: 1 / 1;
+/* The overflow mask the character roll needs. Padding grows the CLIP region
+   past the headline's tight 1.02 line-height so ascenders and descenders are
+   never sliced at rest, and the equal negative margin keeps the laid-out box
+   unchanged so the mask itself cannot shift the line. */
+.hero-play .hp-verb__rotate {
+  overflow: hidden;
+  padding: 0.16em 0.06em 0.28em;
+  margin: -0.16em -0.06em -0.28em;
+}
+.hero-play .hp-verb__rotate > div > span > span {
+  will-change: transform, opacity;
+}
+/* Pre-hydration and reduced-motion fallback: the same word, no mask, no
+   motion, identical metrics. */
+.hero-play .hp-verb__static {
   white-space: nowrap;
 }
-.hero-play .hp-verb__sizer {
-  visibility: hidden;
-}
-/* Animated only for changes after first paint (data-animate), so the default
-   verb renders instantly at load and under no-JS. Only the verb moves. */
-.hero-play .hp-verb__word[data-animate="true"] {
-  animation: hp-verb-in 240ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
-}
-@keyframes hp-verb-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-}
-
 /* --- The controller, v2 --------------------------------------------------- */
 /* A small physical product: matte red molded shell with REAL extruded depth
    (stacked slices, not a drop shadow), ivory inset faceplate, charcoal rubber
@@ -516,56 +549,17 @@ html:has(#hero) {
   transition-duration: 80ms;
   transition-timing-function: ease-out;
 }
-/* Active mode: a restrained ivory rim, updated by autoplay too (feedback only,
-   never a simulated press). */
+/* Active mode: the selected cap lights up in the controller's own red, ringed
+   by a thin ivory separator. With the caption gone this is the only sighted
+   cue for which word is selected, so it has to carry real weight: red on the
+   ivory faceplate is 5.3:1, where the previous ivory rim was ~1.1:1. */
 .hero-play .hp-act[data-active="true"] .hp-act__cap {
+  background: radial-gradient(circle at 38% 30%, #e0593f, var(--color-play-red) 58%, #8e2417);
   box-shadow:
-    0 0 0 2px rgba(249, 244, 231, 0.95),
+    0 0 0 2px var(--color-play-face),
+    0 0 0 3px var(--color-play-red-deep),
     0 3px 4px rgba(11, 13, 16, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16);
-}
-
-/* Caption + pause control, outside the faceplate, under the object. */
-.hero-play .hp-caption-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 20px;
-}
-.hero-play .hp-caption {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  /* 0.7 alpha on white = 7.4:1, comfortably past WCAG AA for small text. */
-  color: rgba(11, 13, 16, 0.7);
-}
-.hero-play .hp-pause {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 9999px;
-  border: 1px solid rgba(11, 13, 16, 0.45);
-  background: transparent;
-  color: rgba(11, 13, 16, 0.7);
-  cursor: pointer;
-  padding: 0;
-  transition: border-color 160ms var(--ease-out), color 160ms var(--ease-out);
-}
-.hero-play .hp-pause:hover {
-  border-color: var(--color-void);
-  color: var(--color-void);
-}
-.hero-play .hp-pause:focus-visible {
-  outline: 2px solid var(--color-void);
-  outline-offset: 3px;
-}
-@media (pointer: coarse) {
-  .hero-play .hp-pause {
-    width: 44px;
-    height: 44px;
-  }
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
 }
 
 /* The site-wide amber focus ring measures ~2.4:1 on white; ink is ~19:1.
@@ -574,19 +568,14 @@ html:has(#hero) {
   outline-color: var(--color-void);
 }
 
-/* Reduced motion: no pointer tilt (the island also gates its listeners), no
-   verb slide, no springs. The verb swaps instantly; the dimensional resting
-   pose stays (it is a static appearance, not motion); press and focus
-   feedback stay as immediate static states. */
+/* Reduced motion: no pointer tilt (the island also gates its listeners) and no
+   character cycling (the island renders the plain word instead of the animated
+   one, so there is no CSS animation left to disable here). The dimensional
+   resting pose stays, being a static appearance rather than motion; press and
+   focus feedback stay as immediate static states. */
 @media (prefers-reduced-motion: reduce) {
-  /* Must out-specify the [data-animate="true"] rule that arms the entrance. */
-  .hero-play .hp-verb__word[data-animate="true"],
-  .hero-play .hp-verb__word {
-    animation: none;
-  }
   .hero-play .hp-cross,
-  .hero-play .hp-act__cap,
-  .hero-play .hp-pause {
+  .hero-play .hp-act__cap {
     transition: none;
   }
 }
@@ -813,5 +802,113 @@ html:has(#hero) {
   ::view-transition-old(*),
   ::view-transition-new(*) {
     animation: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Fluid interaction cursor (components/site/FluidCursor.tsx, physics in
+   lib/fluid-cursor.ts). Inert until the engine mounts and sets
+   html[data-fluid-cursor="on"], so a phone, a reduced-motion visitor, or a
+   failed chunk keeps the ordinary system cursor.
+
+   Legibility across this site's two regimes comes from `mix-blend-mode:
+   exclusion` on a white cursor rather than a fixed color: it resolves
+   near-black over the white hero and near-white over the near-black page,
+   with no state to keep in sync. A backdrop at almost exactly 50% grey is the
+   degenerate case for any inverting blend, so the ring also filters its own
+   backdrop with contrast(), which widens the separation for near-mid
+   backdrops (it cannot rescue an exactly-mid one, and nothing on this site
+   presents a large surface at that value).
+
+   Why these three layers are body children and not one wrapper: an element
+   with mix-blend-mode blends only within its nearest ancestor stacking
+   context. A fixed, z-indexed wrapper IS a stacking context, so wrapped
+   layers blend against each other instead of the page. Measured: the dot came
+   out at #ebebeb on the white hero (white inverted against the ring's own 8%
+   fill) and the ring itself was invisible. Keeping them at body level puts
+   their blending group at the root, where the page is. For the same reason
+   none of them may gain an opacity, filter, or blended ancestor.
+*/
+html[data-fluid-cursor="on"],
+html[data-fluid-cursor="on"] * {
+  /* !important because this has to beat every local `cursor: pointer`,
+     including Tailwind's cursor-* utilities, at any specificity. */
+  cursor: none !important;
+}
+/* Text entry keeps its I-beam: a blob cannot say "you can type here". */
+html[data-fluid-cursor="on"] textarea,
+html[data-fluid-cursor="on"] [contenteditable=""],
+html[data-fluid-cursor="on"] [contenteditable="true"],
+html[data-fluid-cursor="on"]
+  input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]) {
+  cursor: text !important;
+}
+
+.fcur-ring,
+.fcur-dot,
+.fcur-ripple {
+  position: fixed;
+  left: 0;
+  top: 0;
+  /* Above the fixed nav (z-40) and the skip link (z-50). */
+  z-index: 60;
+  pointer-events: none;
+  box-sizing: border-box;
+  opacity: 0;
+  mix-blend-mode: exclusion;
+  /* Load-bearing. Each layer is placed by a transform chain ending in
+     translate(-50%, -50%) to center its box on a point. Under the default
+     origin of 50% 50% the browser wraps the chain in translate(origin) ...
+     translate(-origin), so a rotate() in the chain rotates that centering
+     shift too and throws the layer off its point by as much as twice its
+     half-diagonal (measured: 91px on a locked nav link). With the origin at
+     0 0 the chain means exactly what it reads as. */
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.fcur-ring {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid #fff;
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.08);
+  /* No hand-written -webkit- twin here. Lightning CSS treats the two as one
+     property, dedupes them, and kept only the prefixed form, which current
+     Chrome ignores: the lens computed to `none` in the production build while
+     working in dev. Prefixing is the build's job, driven by browserslist. */
+  backdrop-filter: contrast(1.22);
+}
+.fcur-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #fff;
+}
+.fcur-ripple {
+  width: 110px;
+  height: 110px;
+  border: 1.5px solid #fff;
+  border-radius: 999px;
+}
+
+/* Forced colors: the system owns every color, and a blended white overlay can
+   resolve to nothing. Stand down entirely and give the native cursor back. */
+@media (forced-colors: active) {
+  html[data-fluid-cursor="on"],
+  html[data-fluid-cursor="on"] * {
+    cursor: auto !important;
+  }
+  .fcur-ring,
+  .fcur-dot,
+  .fcur-ripple {
+    display: none;
+  }
+}
+
+@media print {
+  .fcur-ring,
+  .fcur-dot,
+  .fcur-ripple {
+    display: none;
   }
 }

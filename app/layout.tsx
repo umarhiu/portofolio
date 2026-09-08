@@ -4,6 +4,7 @@ import { ViewTransitions } from "next-view-transitions";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { site } from "@/lib/content";
 import { SmoothScroll } from "@/components/site/SmoothScroll";
+import { FluidCursor } from "@/components/site/FluidCursor";
 import "./globals.css";
 import { heroIntroBootstrap } from "@/lib/hero-intro-bootstrap";
 
@@ -83,6 +84,7 @@ export default function RootLayout({
           </a>
           {children}
           <SmoothScroll />
+          <FluidCursor />
           <SpeedInsights />
         </body>
       </html>
