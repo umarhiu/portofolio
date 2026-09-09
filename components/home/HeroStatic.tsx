@@ -1,5 +1,6 @@
 import { hero } from "@/lib/content";
 import { HeroPlay } from "@/components/hero/HeroPlay";
+import { HeroStudio } from "@/components/hero/HeroStudio";
 import { TextReveal } from "@/components/ui/text-reveal-animation";
 
 /*
@@ -26,7 +27,8 @@ export function HeroStatic() {
         <style>{`.hero-play .hp-dpad,.hero-play .hp-act{opacity:.5;cursor:default}`}</style>
       </noscript>
 
-      <div className="mx-auto w-full max-w-[1200px] text-center">
+      <HeroStudio />
+      <div className="relative z-[1] mx-auto w-full max-w-[1200px] text-center">
         <p className="mb-6 font-mono text-xs uppercase tracking-[0.22em] text-void/60 sm:mb-8">
           <span data-hero-enter="identity" className="inline-block">{hero.identity}</span>
         </p>

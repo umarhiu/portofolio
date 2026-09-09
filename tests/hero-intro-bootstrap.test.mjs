@@ -37,13 +37,18 @@ function fixture(options = {}) {
   class Element { closest() { return options.actionable ?? true; } }
   const context = vm.createContext({
     window, document, Element, Event: class { constructor(type) { this.type = type; } },
-    location: { pathname: options.path || "/", hash: options.hash || "" },
+    location: { pathname: options.path || "/", hash: options.hash || "", search: "" },
     scrollY: options.scroll || 0,
     performance: { getEntriesByType: () => [{ type: options.navigation || "navigate" }] },
     setTimeout: (fn, delay) => { timers.set(++timerId, { fn, at: now + delay }); return timerId; },
     clearTimeout: id => timers.delete(id),
     requestAnimationFrame: fn => frames.push(fn),
   });
+  context.history = {
+    scrollRestoration: "auto", state: null,
+    replaceState: () => { context.location.hash = ""; },
+  };
+  window.scrollTo = () => { context.scrollY = 0; };
   vm.runInContext(bootstrap, context);
   return {
     window, document, media, attrs, timers, styles, context, Element,
@@ -56,6 +61,23 @@ function fixture(options = {}) {
     },
   };
 }
+
+test("homepage reload resets position and hash, and can replay the intro", () => {
+  const f = fixture({ navigation: "reload", scroll: 900, hash: "#selected-work" });
+  assert.equal(f.context.scrollY, 0);
+  assert.equal(f.context.location.hash, "");
+  assert.equal(f.context.history.scrollRestoration, "manual");
+  f.window.dispatchEvent({ type: "scroll" });
+  assert.equal(f.intro.start(), true);
+  f.window.dispatchEvent({ type: "pagehide" });
+  assert.equal(f.context.history.scrollRestoration, "auto");
+});
+
+test("reduced-motion reload returns to top without entrance", () => {
+  const f = fixture({ navigation: "reload", scroll: 900, reduced: true });
+  assert.equal(f.context.scrollY, 0);
+  assert.equal(f.intro.state, "ready");
+});
 
 test("slow/missing bundle or unresolved font preparation fails open at 600ms", () => {
   const f = fixture();

@@ -4,6 +4,16 @@
  */
 export const heroIntroBootstrap = String.raw`(() => {
   if (window.__heroIntro) return;
+  const navigation = performance.getEntriesByType('navigation')[0];
+  const restartOnReload = location.pathname === '/' && navigation?.type === 'reload';
+  if (restartOnReload) {
+    // Run before paint/restoration, including reloads from an anchor section.
+    history.scrollRestoration = 'manual';
+    if (location.hash) history.replaceState(history.state, '', location.pathname + location.search);
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    // Restore native history behavior when leaving this document.
+    window.addEventListener('pagehide', () => { history.scrollRestoration = 'auto'; }, { once: true });
+  }
   const root = document.documentElement;
   const media = window.matchMedia('(prefers-reduced-motion: reduce)');
   let timer;
@@ -50,7 +60,6 @@ export const heroIntroBootstrap = String.raw`(() => {
       return true;
     }
   };
-  const navigation = performance.getEntriesByType('navigation')[0];
   if (location.pathname !== '/' || location.hash || scrollY > 0 ||
       document.hidden || media.matches || navigation?.type === 'back_forward') return;
   const listen = (target, name, callback, options) => {
@@ -61,7 +70,9 @@ export const heroIntroBootstrap = String.raw`(() => {
   timer = setTimeout(() => intro.finish('readiness-timeout'), 600);
   intro.state = 'preparing';
   intro.reason = '';
-  listen(window, 'scroll', () => intro.finish('scroll'), { passive: true });
+  listen(window, 'scroll', () => {
+    if (!restartOnReload || scrollY > 0) intro.finish('scroll');
+  }, { passive: true });
   listen(window, 'wheel', () => intro.finish('scroll-input'), { passive: true });
   listen(window, 'resize', () => {
     if (intro.state === 'entering') intro.finish('resize');

@@ -24,11 +24,13 @@ export function HeroTransition({ children }: { children: ReactNode }) {
     offset: ["start start", "55% start"],
   });
   const clipPath = useTransform(scrollYProgress, (progress) => {
-    const rise = (start: number) =>
-      `calc(100% - ${35 * Math.max(0, Math.min(1, (progress - start) / (1 - start)))}dvh)`;
-    const center = rise(0);
-    const adjacent = rise(0.18);
-    const outer = rise(0.36);
+    // Different final heights retain the staircase as the hero leaves the
+    // viewport. All strips still reverse to zero at the top of the page.
+    const rise = (start: number, height: number) =>
+      `calc(100% - ${height * Math.max(0, Math.min(1, (progress - start) / (1 - start)))}dvh)`;
+    const center = rise(0, 35);
+    const adjacent = rise(0.18, 26);
+    const outer = rise(0.36, 17);
     return `polygon(0 0, 100% 0, 100% ${outer}, 80% ${outer}, 80% ${adjacent}, 60% ${adjacent}, 60% ${center}, 40% ${center}, 40% ${adjacent}, 20% ${adjacent}, 20% ${outer}, 0 ${outer})`;
   });
 

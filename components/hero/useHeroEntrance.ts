@@ -29,7 +29,7 @@ declare global {
 */
 const IDENTITY = { appear: 0.3, hold: 0.3, dock: 0.55 };
 
-type Group = { name: string; from: string; to?: string };
+type Group = { name: string; from: string; to?: string; elementStagger?: number };
 type Beat = {
   duration: number;
   groups: Group[];
@@ -50,6 +50,7 @@ const BEATS: Beat[] = [
       { name: "gamepad", from: "translateY(24px) scale(0.94) rotate(-5deg)", to: "translateY(0px) scale(1) rotate(0deg)" },
       // Concurrent with the controller, not trailing the whole intro.
       { name: "nav", from: "translateY(-8px)" },
+      { name: "studio", from: "translateY(18px) scale(0.97)", to: "translateY(0px) scale(1)", elementStagger: 0.07 },
     ],
   },
   { duration: 0.3, stagger: 0.028, groups: [{ name: "line-one", from: LETTER_RISE, to: LETTER_FLAT }] },
@@ -76,7 +77,8 @@ function measureDuration(): number {
       const longest = Math.max(
         ...beat.groups.map(group => {
           const count = targetsFor(beat, group).length;
-          return beat.stagger && count > 1 ? (count - 1) * beat.stagger : 0;
+          const spacing = group.elementStagger ?? beat.stagger ?? 0;
+          return count > 1 ? (count - 1) * spacing : 0;
         }),
         0,
       );
@@ -151,7 +153,8 @@ export function useHeroEntrance() {
             }, {
               duration: beat.duration,
               ease: EASE_OUT,
-              ...(beat.stagger ? { delay: stagger(beat.stagger) } : {}),
+              ...((group.elementStagger ?? beat.stagger)
+                ? { delay: stagger(group.elementStagger ?? beat.stagger!) } : {}),
             });
           }).filter(Boolean) as ReturnType<typeof animate>[];
           controls = plays[0];
