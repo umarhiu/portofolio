@@ -21,6 +21,17 @@ follows the same rule.
 - **One accent per viewport.** Amber (`--color-accent`) is the only accent. Use it
   for a single point of emphasis at a time (active state, one rule, one CTA), never
   as a fill spread across a screen.
+  One scoped exception, deliberate: the Selected Work chapter takes the accent to a
+  full surface (`--color-amber-field`, `--color-amber-deep`, scoped to
+  `.work-chapter`). It is the one chapter allowed to do this, it is entered through
+  a zoom into the accent words that precede it, and it carries a second exception
+  with it: a gradient on a large surface, which the build spec otherwise forbids.
+  That gradient is material rather than ambient, brightest where the title sits and
+  falling off toward the bottom edge, and it never crosses type. On that field only
+  near-black ink is legible: vellum measures 2.33:1 and graphite 1.31:1, while void
+  is 6.79:1 at the top of the gradient and 5.29:1 at its darkest rendered point. The
+  cards stay dark objects on the field, so nothing inside them changes. Do not
+  darken `--color-amber-deep` without re-measuring; 4.62:1 is where void ink breaks.
 - **No pure white type.** On dark surfaces the lightest ink is vellum (`#ece7dd`),
   an off-white; never `#fff`. Pure white appears only as a *surface*: the hero
   canvas (`--color-paper`) and illustration/screenshot content inside project
@@ -128,6 +139,36 @@ mx-auto max-w-[1400px]     // centered content column
 - **Reading column** (case study article): `mx-auto max-w-[760px]`.
 - **Section rhythm**: vertical padding `py-24`, `lg:py-32`.
 - **Prose measure**: cap body text around `max-w-[42ch]` where line length matters.
+
+The gutter belongs on the full-width outer element and the max-width on the block
+inside it, in that order. Putting the padding inside the capped block instead
+insets the content by the gutter again once the cap binds, which is how the nav
+wordmark ended up 32px out of line with every section below it.
+
+### Navigation bar
+
+The bar uses the same frame, so the wordmark sits on the same vertical as the
+section content: gutter on `.site-nav__links`, column on `.site-nav__row`.
+
+It has three scroll states, driven from `components/site/Nav.tsx` and mirrored to
+`data-mode` on the header: `full` (the whole bar) at the top of the page,
+`compact` (a 48px hamburger pill, centred) once scrolled, and `hidden` while
+scrolling down away from the hero. The header animates its own width between
+`100vw` and `48px`.
+
+Two invariants, both load-bearing:
+
+- **`.site-nav__links` must never have a max-width.** It is a full-viewport
+  positioning wrapper: `left: 50%` offsets it by half the *header* width and
+  `translate: -50%` pulls back half of *its own* width, which cancel only while
+  it is exactly `100vw`. That pair is what keeps the row centred on the viewport
+  while the header collapses to the pill, and `mx-auto` cannot do that job
+  because auto margins stop centring once the element is wider than its
+  container. When this element also carried `max-w-[1400px]`, everything above
+  1400px was displaced right by `(100vw - 1400) / 2`.
+- **Style the wordmark through `.site-nav__mark`, never a child combinator.**
+  Its compact-mode fade was written as `.site-nav__links > a`, which silently
+  stopped applying the moment the row was introduced.
 
 ### Borders and structure
 
@@ -259,9 +300,21 @@ the accessible baseline.
   motion defaults to manual, swaps instantly, and drops tilt and springs while
   keeping static press/focus feedback. The boundary into the next section is a
   stepped cap (center highest) revealed by native scroll.
-- The Selected Work cinematic uses `html[data-work="cinematic"]`, which hides the
-  static fallback grid (`.work-static`). The GSAP island provides its own scroll
-  track.
+- Selected Work is selected by `WORK_CHAPTER` in `lib/flags.ts`, a real branch rather
+  than a CSS hide, because every implementation renders each project with the same
+  view-transition-name and duplicates break the page transition.
+  - `chapter` (current): the vendored Glyph Portal (`components/ui/glyph-portal.tsx`,
+    MIT, notice kept) with the word WORK in the display face, the amber field
+    showing through the letters, and a scroll-driven camera into the ink until the
+    amber fills the viewport. It reveals `components/work/WorkRail.tsx`: six big
+    image-first cards on a horizontal rail that the page scroll drives sideways one
+    card per viewport, snapping on a Motion spring, with a live `01 / 06` counter.
+    `WorkPortal` waits for the display face before mounting the portal, because the
+    portal freezes whichever faces are loaded at mount and treats a pending face as
+    a stall. Server render, touch, narrow and reduced motion all get the same cards
+    as a native horizontal snap scroller with no track.
+  - `cinematic`: the original vertical card stack, a code-split GSAP island gated by
+    `html[data-work="cinematic"]`, which hides the static grid (`.work-static`).
 - Rule of thumb: SSR the accessible version, gate the enhancement behind a capability
   attribute, and make the two share one palette and one set of card components so
   they cannot drift.

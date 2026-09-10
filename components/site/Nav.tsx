@@ -95,12 +95,16 @@ export function Nav({ initialTheme = "dark" }: { initialTheme?: "light" | "dark"
         }}>
         <Menu aria-hidden="true" size={22} strokeWidth={1.6} />
       </motion.button>
+      {/* Two elements, two jobs. This one stays exactly 100vw so it can hold
+          the row centred on the viewport while the header collapses to a pill
+          (see .site-nav__links in globals.css: it must never get a max-width).
+          It also carries the gutter. */}
       <nav
         id="primary-navigation"
         inert={!expanded}
         data-hero-enter={initialTheme === "light" ? "nav" : undefined}
         aria-label="Primary"
-        className="site-nav__links mx-auto flex h-16 max-w-[1400px] items-center justify-between px-4 sm:px-8"
+        className="site-nav__links px-4 sm:px-8 lg:px-20"
         onClick={event => {
           if ((event.target as HTMLElement).closest("a")) {
             openedAt.current = null;
@@ -108,37 +112,42 @@ export function Nav({ initialTheme = "dark" }: { initialTheme?: "light" | "dark"
           }
         }}
       >
-        {/* Tightened below sm so all four links + wordmark clear a 360px
-            viewport without colliding (same content, smaller type/gaps). */}
-        <a
-          href="#main"
-          className="site-nav__mark font-display text-base font-extrabold uppercase tracking-tight text-vellum sm:text-lg"
-        >
-          {site.name}
-        </a>
-        <ul className="flex items-center gap-3.5 font-mono text-[10px] uppercase tracking-[0.14em] text-graphite sm:gap-8 sm:text-xs sm:tracking-widest">
-          {nav.map((item, index) => (
-            <motion.li key={item.href} initial={false}
-              animate={{ opacity: expanded ? 1 : 0, x: expanded ? 0 : -20, scale: expanded ? 1 : 0.95 }}
-              transition={reducedMotion ? { duration: 0 } : expanded
-                ? { type: "spring", damping: 15, delay: 0.2 + index * 0.07 }
-                : { duration: 0.2, delay: (nav.length - 1 - index) * 0.05 }}>
-              <Link
-                href={item.href}
-                className="nav-flip transition-colors duration-200 hover:text-vellum"
-              >
-                <span className="nav-flip__inner">
-                  <span className="nav-flip__face nav-flip__face--front">
-                    {item.label}
+        {/* The content column, built like every page section: gutter outside,
+            max-w-[1400px] inside. That is what puts the wordmark on the same
+            vertical as the sections below (docs/design.md, Page container). */}
+        <div className="site-nav__row mx-auto flex h-16 max-w-[1400px] items-center justify-between">
+          {/* Tightened below sm so all four links + wordmark clear a 360px
+              viewport without colliding (same content, smaller type/gaps). */}
+          <a
+            href="#main"
+            className="site-nav__mark font-display text-base font-extrabold uppercase tracking-tight text-vellum sm:text-lg"
+          >
+            {site.name}
+          </a>
+          <ul className="flex items-center gap-3.5 font-mono text-[10px] uppercase tracking-[0.14em] text-graphite sm:gap-8 sm:text-xs sm:tracking-widest">
+            {nav.map((item, index) => (
+              <motion.li key={item.href} initial={false}
+                animate={{ opacity: expanded ? 1 : 0, x: expanded ? 0 : -20, scale: expanded ? 1 : 0.95 }}
+                transition={reducedMotion ? { duration: 0 } : expanded
+                  ? { type: "spring", damping: 15, delay: 0.2 + index * 0.07 }
+                  : { duration: 0.2, delay: (nav.length - 1 - index) * 0.05 }}>
+                <Link
+                  href={item.href}
+                  className="nav-flip transition-colors duration-200 hover:text-vellum"
+                >
+                  <span className="nav-flip__inner">
+                    <span className="nav-flip__face nav-flip__face--front">
+                      {item.label}
+                    </span>
+                    <span aria-hidden className="nav-flip__face nav-flip__face--back">
+                      {item.label}
+                    </span>
                   </span>
-                  <span aria-hidden className="nav-flip__face nav-flip__face--back">
-                    {item.label}
-                  </span>
-                </span>
-              </Link>
-            </motion.li>
-          ))}
-        </ul>
+                </Link>
+              </motion.li>
+            ))}
+          </ul>
+        </div>
       </nav>
     </motion.header>
   );

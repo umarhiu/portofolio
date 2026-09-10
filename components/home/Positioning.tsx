@@ -10,7 +10,7 @@ import {
   useMotionValueEvent,
   type MotionValue,
 } from "motion/react";
-import { site } from "@/lib/content";
+import { positioning } from "@/lib/content";
 
 /*
   The statement holds in view while its scroll-linked sequence completes,
@@ -22,7 +22,18 @@ import { site } from "@/lib/content";
   at full opacity; the effect is a motion-only enhancement.
 */
 
-const words = site.tagline.split(" ");
+/*
+  The headline only. site.tagline is the meta description and is deliberately
+  not reused here.
+
+  The accented tail sits in a nowrap span so it can never split across a line
+  break, which is what orphaned the word RUN on a fourth line. It still reveals
+  word by word inside that span, and its indices continue from the lead, so the
+  scroll reveal runs straight through.
+*/
+const leadWords = positioning.headline.lead.split(" ");
+const accentWords = positioning.headline.accent.split(" ");
+const wordCount = leadWords.length + accentWords.length;
 
 /*
   Word highlighting follows the section from entering to leaving the viewport.
@@ -30,7 +41,7 @@ const words = site.tagline.split(" ");
 */
 const WORDS_START = 0.3;
 const WORDS_END = 0.92;
-const STEP = (WORDS_END - WORDS_START) / words.length;
+const STEP = (WORDS_END - WORDS_START) / wordCount;
 
 function Word({
   progress,
@@ -131,20 +142,47 @@ export function Positioning() {
         >
           <div>
             <p
-              className="max-w-[20ch] font-display font-bold uppercase leading-[0.98] tracking-tight text-vellum"
+              // text-balance evens the rag inside each line span, so a segment
+              // that has to wrap does it gracefully instead of leaving a stub.
+              className="max-w-[20ch] text-balance font-display font-bold uppercase leading-[0.98] tracking-tight text-vellum"
               style={{ fontSize: "clamp(2rem, 4.5vw, 4rem)" }}
             >
-              {words.map((w, i) => (
-                <Word key={`${w}-${i}`} progress={smooth} index={i} active={active}>
-                  {w}
+              {leadWords.map((word, i) => (
+                <Word key={`${word}-${i}`} progress={smooth} index={i} active={active}>
+                  {word}
                 </Word>
               ))}
+              <span className="whitespace-nowrap text-accent">
+                {accentWords.map((word, i) => (
+                  <Word
+                    key={`${word}-${i}`}
+                    progress={smooth}
+                    index={leadWords.length + i}
+                    active={active}
+                  >
+                    {word}
+                  </Word>
+                ))}
+              </span>
             </p>
+            {/* Bio and capability line ride the same fade, so both arrive once
+                the headline has finished revealing. The bio matches the About
+                treatment so the two sections read as one voice. */}
+            <motion.p
+              style={{
+                opacity: active ? domainOpacity : 1,
+                fontSize: "1.18rem",
+                lineHeight: 1.65,
+              }}
+              className="mt-8 max-w-[58ch] leading-relaxed text-vellum/85"
+            >
+              {positioning.bio}
+            </motion.p>
             <motion.p
               style={{ opacity: active ? domainOpacity : 1 }}
               className="mt-8 font-mono text-xs uppercase tracking-[0.18em] text-graphite"
             >
-              {site.domains.join("  /  ")}
+              {positioning.capabilities.join("  /  ")}
             </motion.p>
           </div>
 

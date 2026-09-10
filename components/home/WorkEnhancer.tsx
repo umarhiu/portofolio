@@ -7,14 +7,16 @@ import dynamic from "next/dynamic";
   On a capable desktop only, code-split + mount the GSAP "Selected Work"
   cinematic and hide the static grid (via data-work).
   Keeps GSAP out of the home First Load JS: it ships only inside
-  this dynamically imported, never-SSR'd chunk. The 360dvh track height is
-  reserved by the loading skeleton so the swap causes no layout jump.
+  this dynamically imported, never-SSR'd chunk. The track height is reserved by
+  the loading skeleton so the swap causes no layout jump; keep the skeleton in
+  step with the track in SelectedWorkCinematic (it drifted to 360 once while the
+  track was 440, an 80dvh jump on the swap).
 */
 const SelectedWorkCinematic = dynamic(
   () => import("@/components/work/SelectedWorkCinematic"),
   {
     ssr: false,
-    loading: () => <div aria-hidden className="h-[360dvh]" />,
+    loading: () => <div aria-hidden className="h-[440dvh]" />,
   },
 );
 

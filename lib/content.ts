@@ -11,10 +11,11 @@
 export const site = {
   name: "Umar",
   role: "Product Designer",
-  tagline: "Product designer for complex software. I make dense systems feel obvious.",
+  // Consumed only as the meta / OpenGraph / Twitter description in app/layout.tsx.
+  // The Positioning section has its own headline below; do not reuse this there.
+  tagline: "Product designer working on trade-in and buyback infrastructure at Reusely. I go from the brief to a coded prototype that runs.",
   email: "umar@reusely.com",
   availability: "Available for select work in 2026",
-  domains: ["Dashboards", "Workflows", "Design systems", "Data-heavy B2B"],
   lastUpdated: "2026-06-01",
   // The fonts and stack are named in the footer colophon as a quiet signal of craft.
   colophon: "Set in Archivo Expanded, Spectral, and JetBrains Mono. Built with Next.js and GSAP.",
@@ -600,6 +601,49 @@ export interface PracticePillar {
   body: string;
 }
 
+/*
+  The statement section below the hero (components/home/Positioning.tsx).
+  Three slots: a short headline revealed word by word in display type, a bio at
+  reading size, and the capability line in mono.
+
+  Every claim here is verified against his resume and a direct interview. The
+  headline deliberately advances the hero rather than restating it, and the bio
+  does not open with "I am a product designer" because the hero support line
+  already does. Do not add a metric, a tenure figure, or any claim that he
+  designs AI features inside products; he does not.
+
+  His flow goes from the brief straight to a coded prototype. He does not draw
+  wireframes and does not build mockups, so name neither as a step here. The copy
+  still stops short of claiming he has abandoned Figma, because the case studies
+  below describe Figma variables and tokens in two design systems and name Figma
+  MCP in the workflow stack. An absolute claim would make the page contradict
+  itself. The conventional wireframe-then-mockup path is named once, in the
+  Reusely workflow case study, as the path being compared against.
+*/
+export const positioning = {
+  /*
+    Split so the payoff can be accented and kept unbreakable. `accent` is the
+    single point of emphasis this viewport is allowed, per the one-accent rule
+    in docs/design.md, and it renders amber on void at 6.8:1.
+
+    The wording is measured, not arbitrary. This column fits about ten uppercase
+    characters per line at 64px, so a line holds one word. "Most prototypes are
+    pictures." ragged badly, leaving "Most" filling 35 percent of its line and
+    orphaning "RUN." at some widths. "demos" instead of "prototypes" rags to
+    three lines at 82, 91 and 62 percent fill, and it stops the headline echoing
+    the word "prototype" that the bio below already uses. Re-measure before
+    changing these words.
+  */
+  headline: {
+    lead: "Most demos are pictures.",
+    accent: "Mine run.",
+  },
+  bio: "At Reusely I work on trade-in and buyback infrastructure, where a flow has too many states to sit still in a mockup. So I go from the brief straight to a coded prototype with Claude and Codex. Far less manual work, and it runs: a platform prototype, a hospital site, this page.",
+  // Three items, not four: the mono line sits in a 616px column at 1440 and a
+  // fourth entry pushed it onto a second line with one word dangling.
+  capabilities: ["User research", "Coded prototypes", "Design systems"],
+} as const;
+
 export const practice: PracticePillar[] = [
   {
     key: "think",
@@ -619,7 +663,5 @@ export const practice: PracticePillar[] = [
 ];
 
 export const about = {
-  // TODO: replace with real bio before launch.
-  body: "I am a product designer focused on complex software. I work with teams building dashboards, workflows, design systems, and data-heavy B2B products, where the job is taming complexity without flattening it. I care equally about the systems decision and the pixel that lands on it.",
-  mock: true,
+  body: "I am a product designer in Bandung, Indonesia. At Reusely I work on trade-in and buyback infrastructure, turning operational flows into interfaces people can follow. Before that I designed platform UI with international teams, including teams in the USA, against design system standards. I studied information systems, and I still take select work outside the day job, most recently a hospital website in South Bandung.",
 };

@@ -195,6 +195,13 @@ Companion docs: the full build contract lives in `docs/substrate-build-spec.md`.
     and breaks left-edge alignment with the rest of the page. Match the
     outer-padding-then-inner-max-w pattern; for absolute overlays, pad the
     inset-0 element and centre an inner max-w wrapper.
+    This recurred in the nav bar, which had carried max-w plus padding on one
+    element since it was written, leaving the wordmark 48px inside the section
+    column from 1024px up. It got worse when that same element also gained
+    width:100vw with a left/translate centring pair, because the max-width then
+    stopped the two offsets cancelling and displaced the whole row right by
+    (100vw - 1400)/2, measured at 634px on a 2034px screen. Two elements, two
+    jobs: see the Navigation bar notes in design.md.
 13. matchMedia cleanup. A gsap.matchMedia() created inside useGSAP is NOT
     reverted by the useGSAP context revert. Return () => mm.revert() from the
     useGSAP callback so its listeners and tweens tear down on unmount (the

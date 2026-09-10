@@ -26,6 +26,15 @@
   --color-play-face: #f9f4e7;
   --color-play-dark: #26282e;
 
+  /* Work-chapter palette (components/work/WorkChapter.tsx): the accent taken
+     to a full surface for exactly one chapter. --amber-field is the accent
+     itself; --amber-deep is the gradient falloff and is held deliberately
+     light, because void ink measures 4.84:1 on it and 4.62:1 is the floor
+     where 4.5:1 would break. Do not darken it without re-measuring. Scoped
+     to .work-chapter; every other surface stays dark. */
+  --color-amber-field: #ff6a1a;
+  --color-amber-deep: #d95410;
+
   --font-display: var(--font-archivo-expanded), "Arial Black", system-ui, sans-serif;
   --font-serif: var(--font-spectral), Georgia, "Times New Roman", serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", monospace;
@@ -128,7 +137,7 @@ html.lenis body {
 
 /* For the Selected Work index: when the capable-desktop GSAP cinematic mounts
    (data-work set by WorkEnhancer), hide the static fallback grid. The
-   cinematic island provides its own 360dvh scroll track. */
+   cinematic island provides its own scroll track. */
 html[data-work="cinematic"] .work-static {
   display: none;
 }
@@ -180,15 +189,50 @@ html[data-work="cinematic"] .work-static {
   border: 0;
 }
 .site-nav[data-mode="full"] .site-nav__toggle { pointer-events: none; }
+/*
+  The links wrapper does ONE job: stay exactly as wide as the viewport and
+  centred on the header, so the row inside it keeps its full-width layout while
+  the header collapses to a 48px pill. left: 50% offsets by half the HEADER
+  width and translate: -50% pulls back half of THIS element's width, so the two
+  cancel only while this element is exactly 100vw.
+
+  Never give this element a max-width. It used to also carry Tailwind's
+  `mx-auto max-w-[1400px]`, which clamped it to 1400px above that viewport
+  width: translate then pulled back only 700px and the whole row was displaced
+  right by (100vw - 1400)/2, which measured 634px at 2034px wide (wordmark
+  adrift, links flush to the right edge). The content column lives on
+  .site-nav__row instead, and the gutter is this element's padding, which
+  box-sizing: border-box keeps inside the 100vw.
+
+  Keep the offset on `translate`, never fold it into `transform`. The hero
+  entrance animates this exact element's transform
+  (components/hero/useHeroEntrance.ts drives the "nav" group from
+  translateY(-8px)), and the two properties compose independently. A
+  transform: translateX(-50%) here would be overwritten the moment the intro
+  ran, and the bar would jump half a viewport.
+
+  Known residual, unchanged by the split and zero on this machine: where a
+  platform draws classic (non-overlay) scrollbars, 100vw exceeds the client
+  width, so while the gutter governs rather than the cap the row sits half a
+  scrollbar (about 7.6px) left of the section column. It is zero wherever the
+  1400px cap governs, because both are then centred on the same axis. Curing it
+  would mean driving the width from clientWidth through a JS custom property,
+  which is not worth it.
+*/
 .site-nav__links { width: 100vw; position: relative; left: 50%; translate: -50% 0; }
-.site-nav__links > a {
+/*
+  Keyed to the wordmark's own class, not to a child combinator on the wrapper.
+  These rules read `.site-nav__links > a` before the row existed, so nesting the
+  wordmark one level deeper silently stopped it fading out in compact mode.
+*/
+.site-nav__mark {
   opacity: 1;
   transform: translateX(0) scale(1);
   transition: opacity 200ms ease, transform 250ms cubic-bezier(0.23, 1, 0.32, 1);
   transition-delay: 180ms;
 }
 .site-nav[data-mode="compact"] .site-nav__links { pointer-events: none; }
-.site-nav[data-mode="compact"] .site-nav__links > a {
+.site-nav[data-mode="compact"] .site-nav__mark {
   opacity: 0;
   transform: translateX(-16px) scale(0.97);
   transition-delay: 0ms;
@@ -200,7 +244,7 @@ html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] .site-nav__togg
 }
 @media (prefers-reduced-motion: reduce) {
   .site-nav, .site-nav__links, .site-nav__toggle,
-  .site-nav__links > a, .site-nav__links li { transition: none; }
+  .site-nav__mark, .site-nav__links li { transition: none; }
 }
 .hero-studio * { pointer-events: none !important; }
 .hero-studio__slot { position: absolute; width: clamp(110px, 11vw, 180px); }
@@ -1006,4 +1050,137 @@ html[data-fluid-cursor="on"]
   .fcur-ripple {
     display: none;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   The amber chapter (components/work/WorkChapter.tsx). Selected Work entered
+   through the vendored Glyph Portal (components/ui/glyph-portal.tsx): the
+   word on the dark page, the amber field through the letters, a scroll-driven
+   camera into the ink, then the horizontal rail of case files on the amber.
+
+   Two written rules are knowingly suspended here, both scoped to this one
+   chapter and both recorded in docs/design.md:
+
+   - The one-accent rule (never as a fill spread across a screen).
+   - No gradients on text or large surfaces, from the build spec. The gradient
+     here is material rather than ambient: brightest where the heading sits,
+     falling off toward the bottom edge, never crossing type.
+
+   The ink flip is not a preference. On this field vellum is 2.33:1 and
+   graphite 1.31:1; void is 6.79:1 at the top of the gradient and 4.84:1 at
+   its darkest. Anything landing directly on the amber must be void.
+--------------------------------------------------------------------------- */
+
+/* The portal ships its own :where() rules at zero specificity, so plain class
+   rules here win. It also sets Arial on its root; give it the site faces. */
+.work-portal {
+  font-family: var(--font-serif);
+}
+/* The content slot is a padded centred grid by default. The rail brings its
+   own layout and its own sticky track, so hand it the raw slot. */
+.work-portal [data-gp-content] {
+  padding: 0;
+  display: block;
+  min-height: 0;
+}
+/* The amber field behind the letters and, after the flood, behind the rail.
+   --gp-field-scale is the portal slow push-in during the zoom. */
+.work-portal__field {
+  position: absolute;
+  inset: 0;
+  transform: scale(var(--gp-field-scale, 1));
+  background: radial-gradient(
+    120% 90% at 50% 0%,
+    var(--color-amber-field) 0%,
+    var(--color-amber-field) 42%,
+    var(--color-amber-deep) 100%
+  );
+}
+/* The one link on the opening frame, set like every other eyebrow. */
+.work-portal [data-gp-caption] {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--color-vellum);
+}
+/* Before the display face resolves, and without JavaScript, the rail renders
+   plainly on the amber with no portal frame. */
+.work-portal--pending {
+  background: var(--color-amber-field);
+  color: var(--color-void);
+}
+/* The section hairline is the seam with the statement above. The portal frame
+   is its own boundary, so the rule would only cut across it. */
+#selected-work[data-work-mode="chapter"] {
+  border-top-color: transparent;
+}
+
+/* The rail. Card width is owned here; WorkRail measures it back out of the
+   DOM to compute its snap positions, so this is the one place to resize.
+
+   The third term caps the card by viewport HEIGHT: the media box is 4:3
+   (below), so a card is 0.75 x width tall plus about 28rem of heading, title,
+   outcome and badges. Without the cap a 720px card overran a 768px viewport.
+
+   4:3 is the aspect of the reference this rail was modelled on. The covers
+   themselves are 1:1, so this box crops 12.5 percent off their top and bottom
+   (a 16:10 box cut 37.5 percent and lost the headline baked into cover one).
+   The lasting fix is asset-side: export covers at 4:3, or keep their subject
+   inside the middle 75 percent. */
+.work-rail {
+  --rail-card: min(52vw, 720px, calc((100dvh - 28rem) * 1.3333));
+  --rail-gap: 2.5rem;
+  color: var(--color-void);
+}
+@media (max-width: 1023px) {
+  .work-rail {
+    --rail-card: min(84vw, 560px);
+    --rail-gap: 1.25rem;
+  }
+}
+/* Padding centres card 0; translating by whole slots centres the rest. */
+.work-rail__list {
+  padding-inline: calc(50vw - var(--rail-card) / 2);
+  gap: var(--rail-gap);
+}
+.work-rail__card {
+  flex: 0 0 var(--rail-card);
+  width: var(--rail-card);
+}
+.work-rail__media {
+  aspect-ratio: 4 / 3;
+  border-radius: 24px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-void) 14%, var(--color-amber-field));
+}
+.work-rail__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.work-rail__badge {
+  border: 1px solid color-mix(in srgb, var(--color-void) 45%, transparent);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-void);
+}
+/* The static rail: server render, touch, narrow, reduced motion. A native
+   horizontal scroller with snap points and no visible scrollbar. */
+.work-rail--static .work-rail__list {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.work-rail--static .work-rail__list::-webkit-scrollbar {
+  display: none;
+}
+.work-rail--static .work-rail__card {
+  scroll-snap-align: center;
 }
