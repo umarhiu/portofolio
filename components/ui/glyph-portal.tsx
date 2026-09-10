@@ -9,7 +9,8 @@
  * project. Used by components/work/WorkChapter.tsx as the entrance to the
  * Selected Work chapter. All project-side configuration goes through props and
  * the --gp-* custom properties; the component body is unmodified so it can be
- * diffed against upstream, with one exception: the en dash in the
+ * diffed against upstream. The interior helper is exported for the inline
+ * StatementPortal adaptation. Also, the en dash in the
  * scrollLength comment became the words "1 to 8", because this repo bans that
  * character everywhere and gates on it.
  */
@@ -55,7 +56,7 @@ type Ink = { x: number; y: number; radius: number; index: number };
 type Letter = { index: number; x: number; y: number; width: number; height: number };
 
 /** Largest opaque square, in linear time. Unlike a stem guess, it works in O, S and Ø. */
-function interior(context: CanvasRenderingContext2D, char: string, font: string): Omit<Ink, "index"> | null {
+export function interior(context: CanvasRenderingContext2D, char: string, font: string): Omit<Ink, "index"> | null {
   const canvas = context.canvas;
   context.font = font;
   const m = context.measureText(char);

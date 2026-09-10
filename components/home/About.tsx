@@ -26,7 +26,7 @@ export function About() {
 
         {/* Portrait placeholder, treated as a layered panel (Z-parallax in a later phase). */}
         <div className="lg:pt-2">
-          <div className="aspect-[4/5] w-full border border-hairline bg-[rgba(236,231,221,0.02)]">
+          <div className="aspect-[4/5] w-full border border-hairline bg-[color-mix(in_srgb,var(--color-paper)_2%,transparent)]">
             <div className="flex h-full items-end p-5">
               <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-graphite">
                 Portrait. {site.name}

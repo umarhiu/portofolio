@@ -81,7 +81,7 @@ export function WorkPortal({ children }: { children: ReactNode }) {
         "--gp-paper": "var(--color-void)",
         "--gp-ink": "var(--color-vellum)",
         "--gp-field": "var(--color-amber-field)",
-        "--gp-foreground": "var(--color-void)",
+        "--gp-foreground": "var(--color-primary-foreground)",
       }}
       background={<div aria-hidden="true" className="work-portal__field" />}
     >

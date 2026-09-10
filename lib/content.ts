@@ -121,6 +121,7 @@ export interface CaseStudy {
 export interface Project {
   slug: string;
   title: string;
+  cardTitle?: string;
   context: string;
   depth: Depth;
   type: ProjectType;
@@ -138,6 +139,7 @@ export const projects: Project[] = [
   {
     slug: "reusely-design-workflow",
     title: "Two paths to the same screen",
+    cardTitle: "Two paths. One screen.",
     context: "Reusely, infrastructure for trade-ins and reverse commerce",
     depth: "DEEP DIVE",
     type: "Ways of Working",
@@ -228,6 +230,7 @@ export const projects: Project[] = [
   {
     slug: "reusely-design-system",
     title: "One source of truth",
+    cardTitle: "One source of truth",
     context: "Reusely, infrastructure for trade-ins and reverse commerce",
     depth: "DEEP DIVE",
     type: "Design System",
@@ -295,6 +298,7 @@ export const projects: Project[] = [
   {
     slug: "reusely-rebrand",
     title: "One brand, every screen",
+    cardTitle: "One unified brand",
     context: "Reusely, infrastructure for trade-ins and reverse commerce",
     depth: "DEEP DIVE",
     type: "Rebrand",
@@ -361,6 +365,7 @@ export const projects: Project[] = [
   {
     slug: "rsmbs-hospital-website",
     title: "One foundation, the whole hospital",
+    cardTitle: "One hospital platform",
     context: "RS Muhammadiyah Bandung Selatan, a community hospital in South Bandung",
     depth: "DEEP DIVE",
     type: "Zero-to-One",
@@ -436,6 +441,7 @@ export const projects: Project[] = [
   {
     slug: "strata-nexus-site",
     title: "Prompt to production",
+    cardTitle: "Prompt to production",
     context: "Strata Nexus, an enterprise technology consultancy in Bandung",
     depth: "DEEP DIVE",
     type: "Experiment",
@@ -498,6 +504,7 @@ export const projects: Project[] = [
   {
     slug: "skulytics-design-system",
     title: "From the foundation up",
+    cardTitle: "A system from scratch",
     context: "Skulytics, a customer portal",
     depth: "DEEP DIVE",
     type: "Design System",

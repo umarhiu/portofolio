@@ -5,12 +5,12 @@ import {
   motion,
   useScroll,
   useTransform,
-  useReducedMotion,
   useMotionValue,
   useMotionValueEvent,
   type MotionValue,
 } from "motion/react";
 import { positioning } from "@/lib/content";
+import { StatementPortal } from "@/components/work/StatementPortal";
 
 /*
   The statement holds in view while its scroll-linked sequence completes,
@@ -39,8 +39,8 @@ const wordCount = leadWords.length + accentWords.length;
   Word highlighting follows the section from entering to leaving the viewport.
   The section itself stays visible throughout the handoff, with no entrance fade.
 */
-const WORDS_START = 0.3;
-const WORDS_END = 0.92;
+const WORDS_START = 0.08;
+const WORDS_END = 0.48;
 const STEP = (WORDS_END - WORDS_START) / wordCount;
 
 function Word({
@@ -67,16 +67,22 @@ function Word({
 }
 
 export function Positioning() {
-  const reduce = useReducedMotion();
   const root = useRef<HTMLElement>(null);
+  const accent = useRef<HTMLSpanElement>(null);
   const [active, setActive] = useState(false);
   const [started, setStarted] = useState(false);
   const animationStart = useMotionValue(Infinity);
   const animationEnd = useMotionValue(Infinity);
+  const portalStart = useMotionValue(Infinity);
+  const portalDistance = useMotionValue(1);
 
   useEffect(() => {
-    setActive(!reduce);
-  }, [reduce]);
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setActive(!preference.matches);
+    update();
+    preference.addEventListener("change", update);
+    return () => preference.removeEventListener("change", update);
+  }, []);
 
   const { scrollY } = useScroll();
   useEffect(() => {
@@ -91,11 +97,19 @@ export function Positioning() {
       const inner = section.querySelector<HTMLElement>(".statement__inner");
       if (!inner) return;
       const stickyTop = parseFloat(getComputedStyle(inner).top) || 0;
-      const release = window.scrollY + section.getBoundingClientRect().bottom
-        - inner.getBoundingClientRect().height - stickyTop;
-      // Complete before the sticky constraint releases, with a short reading
-      // hold. The end is tied to actual layout, not the section leaving view.
-      animationEnd.set(Math.max(start + 1, release - window.innerHeight * 0.12));
+      const sectionTop = window.scrollY + section.getBoundingClientRect().top;
+      const padding = parseFloat(getComputedStyle(section).paddingTop) || 0;
+      const height = window.innerHeight;
+      // Preserve the original reading pace. Only the letter camera receives
+      // the requested 3.5-viewport runway, not the word-by-word reveal.
+      const readingEnd = Math.max(start + 1, sectionTop + padding + height * 1.68 - stickyTop);
+      const cameraStart = start + (readingEnd - start) * .64;
+      const cameraDistance = height * 3.5;
+      portalStart.set(cameraStart);
+      portalDistance.set(cameraDistance);
+      // Keep only a brief settling distance before the native-scroll handoff.
+      section.style.setProperty("--statement-runway", `${cameraStart + cameraDistance + height * .04 - sectionTop - padding + stickyTop}px`);
+      animationEnd.set(readingEnd);
       animationStart.set(start);
     };
     measure();
@@ -109,7 +123,9 @@ export function Positioning() {
       observer.disconnect();
       window.removeEventListener("resize", measure);
     };
-  }, [animationStart, animationEnd, active]);
+  }, [animationStart, animationEnd, portalStart, portalDistance, active]);
+  const portalProgress = useTransform(() => Math.max(0, Math.min(1,
+    (scrollY.get() - portalStart.get()) / portalDistance.get())));
   const scrollYProgress = useTransform(() => {
     const start = animationStart.get();
     const end = animationEnd.get();
@@ -122,7 +138,7 @@ export function Positioning() {
 
   const smooth = scrollYProgress;
 
-  const domainOpacity = useTransform(smooth, [WORDS_END, 1], [0, 1]);
+  const supportingOpacity = useTransform(smooth, [0.6, 0.74], [1, 0]);
 
   // Laptop visual: scroll-linked parallax + a gentle turn + a scale-in as the
   // statement reveals. Composed with an idle float on the inner wrapper.
@@ -136,7 +152,7 @@ export function Positioning() {
       aria-label="Positioning"
       className={"statement relative bg-void" + (active ? " is-sticky" : "")}
     >
-      <div className="statement__inner px-4 py-28 sm:px-8 lg:px-20 lg:py-40">
+      <div className="statement__inner overflow-clip px-4 py-28 sm:px-8 lg:px-20 lg:py-40">
         <motion.div
           className="mx-auto grid w-full max-w-[1400px] grid-cols-1 items-center gap-10 will-change-[transform,opacity] lg:grid-cols-2 lg:gap-12"
         >
@@ -145,14 +161,16 @@ export function Positioning() {
               // text-balance evens the rag inside each line span, so a segment
               // that has to wrap does it gracefully instead of leaving a stub.
               className="max-w-[20ch] text-balance font-display font-bold uppercase leading-[0.98] tracking-tight text-vellum"
-              style={{ fontSize: "clamp(2rem, 4.5vw, 4rem)" }}
+              style={{ fontSize: "clamp(2.8rem, 6.5vw, 6.5rem)" }}
             >
+              <motion.span style={{ opacity: active ? supportingOpacity : 1 }}>
               {leadWords.map((word, i) => (
                 <Word key={`${word}-${i}`} progress={smooth} index={i} active={active}>
                   {word}
                 </Word>
               ))}
-              <span className="whitespace-nowrap text-accent">
+              </motion.span>
+              <span ref={accent} className="statement-highlight relative z-10 inline-block whitespace-nowrap">
                 {accentWords.map((word, i) => (
                   <Word
                     key={`${word}-${i}`}
@@ -163,23 +181,11 @@ export function Positioning() {
                     {word}
                   </Word>
                 ))}
+                <span data-portal-baseline aria-hidden="true" className="inline-block h-0 w-0" />
               </span>
             </p>
-            {/* Bio and capability line ride the same fade, so both arrive once
-                the headline has finished revealing. The bio matches the About
-                treatment so the two sections read as one voice. */}
             <motion.p
-              style={{
-                opacity: active ? domainOpacity : 1,
-                fontSize: "1.18rem",
-                lineHeight: 1.65,
-              }}
-              className="mt-8 max-w-[58ch] leading-relaxed text-vellum/85"
-            >
-              {positioning.bio}
-            </motion.p>
-            <motion.p
-              style={{ opacity: active ? domainOpacity : 1 }}
+              style={{ opacity: active ? supportingOpacity : 1 }}
               className="mt-8 font-mono text-xs uppercase tracking-[0.18em] text-graphite"
             >
               {positioning.capabilities.join("  /  ")}
@@ -190,7 +196,7 @@ export function Positioning() {
           <motion.div
             style={
               active
-                ? { y: laptopY, rotate: laptopRotate, scale: laptopScale }
+                ? { y: laptopY, rotate: laptopRotate, scale: laptopScale, opacity: supportingOpacity }
                 : undefined
             }
             className="relative hidden items-center justify-center lg:flex"
@@ -212,6 +218,7 @@ export function Positioning() {
             </motion.div>
           </motion.div>
         </motion.div>
+        {active && <StatementPortal source={accent} progress={portalProgress} readingProgress={smooth} firstWord={leadWords.length} wordStep={STEP} />}
       </div>
     </section>
   );

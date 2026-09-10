@@ -271,7 +271,7 @@ export default function SelectedWorkCinematic() {
         <button
           type="button"
           onClick={handleSkip}
-          className="sr-only focus:not-sr-only focus:absolute focus:left-6 focus:top-6 focus:z-40 focus:bg-accent focus:px-4 focus:py-2 focus:font-mono focus:text-xs focus:uppercase focus:tracking-wider focus:text-void"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-6 focus:top-6 focus:z-40 focus:bg-accent focus:px-4 focus:py-2 focus:font-mono focus:text-xs focus:uppercase focus:tracking-wider focus:text-primary-foreground"
         >
           Skip the stacking animation
         </button>

@@ -232,7 +232,7 @@ export default async function CaseStudyPage({
                     ].map((shot) => (
                       <figure key={shot.label}>
                         <div
-                          className="overflow-hidden border border-hairline bg-[rgba(236,231,221,0.02)]"
+                          className="overflow-hidden border border-hairline bg-[color-mix(in_srgb,var(--color-paper)_2%,transparent)]"
                           style={{ aspectRatio: "16 / 10" }}
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -265,7 +265,7 @@ export default async function CaseStudyPage({
                     href={project.study.prototypeUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-5 inline-flex items-center gap-2 border border-vellum/30 px-5 py-3 font-mono text-xs uppercase tracking-widest text-vellum transition-colors duration-200 hover:border-accent hover:bg-accent hover:text-void"
+                    className="mt-5 inline-flex items-center gap-2 border border-vellum/30 px-5 py-3 font-mono text-xs uppercase tracking-widest text-vellum transition-colors duration-200 hover:border-accent hover:bg-accent hover:text-primary-foreground"
                   >
                     {project.study.prototypeCta ?? "Open the live prototype"}
                     <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden="true" />
@@ -281,7 +281,7 @@ export default async function CaseStudyPage({
                       <img
                         src={shot.src}
                         alt={shot.caption}
-                        className="w-full border border-hairline bg-[rgba(236,231,221,0.02)]"
+                        className="w-full border border-hairline bg-[color-mix(in_srgb,var(--color-paper)_2%,transparent)]"
                         loading="lazy"
                       />
                       <figcaption className="mt-2 font-mono text-xs uppercase tracking-[0.18em] text-graphite">
@@ -310,7 +310,7 @@ export default async function CaseStudyPage({
                           ].map((shot) => (
                             <figure key={shot.l}>
                               <div
-                                className="overflow-hidden border border-hairline bg-[rgba(236,231,221,0.02)]"
+                                className="overflow-hidden border border-hairline bg-[color-mix(in_srgb,var(--color-paper)_2%,transparent)]"
                                 style={{ aspectRatio: "16 / 10" }}
                               >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}

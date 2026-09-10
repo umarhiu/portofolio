@@ -8,12 +8,17 @@
  * then here.
  */
 export const TOKENS = {
+  primary: "#075056",
+  secondary: "#ff5b04",
+  tertiary: "#e4eef0",
+  mirage: "#16232a",
+  paper: "#ffffff",
   void: "#0b0d10",
-  vellum: "#ece7dd",
-  graphite: "#7e848f",
-  hairline: "#2a2e34",
-  accent: "#ff6a1a",
-  drafting: "#3a5a78",
+  vellum: "#ffffff",
+  graphite: "#969c9f",
+  hairline: "#404b50",
+  accent: "#075056",
+  drafting: "#075056",
 } as const;
 
 export type TokenName = keyof typeof TOKENS;

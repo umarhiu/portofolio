@@ -50,7 +50,7 @@ export function HeroStatic() {
           <a
             data-hero-enter="primary"
             href={hero.ctas.primary.href}
-            className="inline-flex min-h-11 w-full max-w-[280px] items-center justify-center bg-void px-6 py-3 font-mono text-xs uppercase tracking-[0.18em] text-vellum transition-opacity duration-200 hover:opacity-85 sm:w-auto sm:max-w-none"
+            className="inline-flex min-h-11 w-full max-w-[280px] items-center justify-center bg-primary px-6 py-3 font-mono text-xs uppercase tracking-[0.18em] text-primary-foreground transition-opacity duration-200 hover:opacity-85 sm:w-auto sm:max-w-none"
           >
             {hero.ctas.primary.label}
           </a>

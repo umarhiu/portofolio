@@ -1,5 +1,55 @@
 # Handoff: the amber Selected Work chapter
 
+## Updated direction, September 10
+
+Palette update: the primary is now forest #145A46, with white foregrounds and
+soft light borders on the work surface. Existing amber-named tokens are legacy
+aliases to primary/primary-deep, not separate orange values. Dark-background
+text accents use readable mint #8FD6B6; the portal blends that opening ink into
+the forest surface. The earlier amber references below are historical.
+
+Positioning now owns the portal opening, with no separate WORK title screen.
+The enlarged headline reveals fully and holds through 64 percent of its progress.
+Then StatementPortal enters the measured solid ink of the actual "Mine run."
+letterforms, using Glyph Portal's opaque-ink scan and logarithmic camera zoom.
+The camera now has 3.5 viewport heights of scroll travel, independent of
+the original headline reading pace, followed by a short full-amber hold.
+The amber fills the entire sticky viewport and stays amber as Selected Work
+scrolls into view. WorkRail retains its scroll-driven card behavior and void
+text on the amber surface. The long Reusely paragraph is no longer rendered.
+
+The work handoff uses normal document scrolling. Once the letters fill the
+viewport with amber, the fully visible heading and cards enter from below as
+the visitor continues scrolling. Both surfaces use the same amber. A static
+35dvh overlap and a reduced 4dvh settling hold shorten the empty amber travel
+by 55dvh, without a visibility switch, fade or artificial entrance transform.
+The experimental WorkReveal wrapper has been removed. Desktop card travel
+starts only once the rail reaches its sticky position; touch keeps native
+horizontal scrolling. Reduced motion keeps the whole handoff in normal flow.
+
+The work rail now starts at the heading gutter rather than centering card one.
+Desktop vertical scrolling drives horizontal overflow continuously at 1:1;
+there is no rounding or spring in its position. The last card ends at the right
+gutter, and the scroll track is measured from the actual overflow. Touch and
+reduced motion retain native horizontal scrolling without mandatory snapping.
+
+The desktop stage reserves 48px above and below its content. Title and outcome
+rows use the tallest measured copy across the six cards, keeping tags aligned.
+Cover height fits the remaining viewport space so the longest card cannot clip
+at the bottom. Viewports shorter than 700px use the normal-flow native rail.
+
+StatementPortal measures DOM character positions and a real baseline to preserve
+the opening layout across viewport sizes and font loading. Its clip and camera
+are driven solely by Positioning's progress: stopping freezes the portal and
+scrolling upward retraces it. The original text remains the accessible source;
+the SVG layer is decorative and never intercepts input. Reduced motion shows
+the statement and work in normal flow without the moving portal or sticky hold.
+
+WorkPortal remains as the legacy wrapper but is not mounted. Glyph Portal keeps
+its original implementation except for exporting its MIT-attributed `interior`
+helper for StatementPortal. The older documentation below records the original
+standalone WORK opening; its typography and timing no longer describe the entry.
+
 The entrance to Selected Work is now a portal. The word WORK sits in the display
 face on the dark page with the amber accent showing through its letterforms;
 scrolling flies a camera into the solid ink of the W until the amber fills the

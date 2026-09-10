@@ -1,13 +1,11 @@
-import { WorkPortal } from "@/components/work/WorkPortal";
 import { WorkRail } from "@/components/work/WorkRail";
 
 /*
   The amber chapter: Selected Work entered through a portal.
 
-  Composition only. WorkPortal is the vendored Glyph Portal configured for the
-  site palette: the word WORK in the display face on the dark page, the amber
-  field visible through the letters, and a scroll-driven camera into one
-  letter's ink until the amber fills the viewport. WorkRail is what the flood
+  Composition only. Positioning's inline StatementPortal now owns the doorway:
+  the actual Mine run. letterforms open until amber fills the viewport.
+  There is no second WORK opening. WorkRail is what the flood
   reveals: the eyebrow with a live counter, the Selected work heading, and the
   six case files as big image-first cards on a horizontal rail that the page
   scroll drives sideways, one card per viewport, snapping card to card.
@@ -25,9 +23,7 @@ import { WorkRail } from "@/components/work/WorkRail";
 export function WorkChapter() {
   return (
     <div className="work-chapter">
-      <WorkPortal>
-        <WorkRail />
-      </WorkPortal>
+      <WorkRail />
     </div>
   );
 }

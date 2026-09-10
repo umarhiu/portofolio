@@ -4,36 +4,38 @@
   Substrate design tokens. Declared once here so JS can read the exact same
   hex via getComputedStyle (see lib/cssvar.ts), which keeps the future WebGL
   hero and the SSR fallback on one palette with zero drift.
-  Locked dark theme. One accent (amber). Drafting blue is contained to the
-  grid layer only and is never used as a UI accent.
+  Deep Sea Green is primary, Blaze Orange secondary, Mirage the neutral.
+  White remains the light canvas. Wild Sand is reserved, not applied.
 */
 @theme {
-  --color-void: #0b0d10;
-  --color-vellum: #ece7dd;
-  --color-graphite: #7e848f;
-  --color-hairline: #2a2e34;
-  --color-accent: #ff6a1a;
-  --color-drafting: #3a5a78;
-
-  /* Hero-local palette (docs/portfolio-hero-brief.md): a white canvas with
-     near-black type (void reused as the ink role) and a red controller as the
-     focal accent. Scoped to the hero; the rest of the site stays dark. The
-     controller keeps its ivory faceplate, so the material contrast against
-     the red shell survives the brighter canvas. */
+  --color-mirage: #16232a;
+  --color-primary: #075056;
+  --color-secondary: #ff5b04;
+  --color-tertiary: #e4eef0;
   --color-paper: #ffffff;
-  --color-play-red: #c43a28;
-  --color-play-red-deep: #8e2417;
-  --color-play-face: #f9f4e7;
-  --color-play-dark: #26282e;
+  --color-void: #0b0d10;
+  --color-vellum: var(--color-paper);
+  --color-graphite: color-mix(in srgb, var(--color-mirage) 45%, white);
+  --color-hairline: color-mix(in srgb, var(--color-mirage) 82%, white);
+  --color-primary-deep: color-mix(in srgb, var(--color-primary) 70%, var(--color-mirage));
+  --color-primary-foreground: #ffffff;
+  --color-secondary-foreground: var(--color-mirage);
+  --color-accent: var(--color-primary);
+  --color-accent-readable: var(--color-secondary);
+  --gradient-primary: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
+  --gradient-primary-highlight: linear-gradient(120deg, color-mix(in srgb, var(--color-primary) 40%, white) 0%, color-mix(in srgb, var(--color-primary) 65%, white) 45%, var(--color-primary) 100%);
+  --color-drafting: var(--color-primary);
 
-  /* Work-chapter palette (components/work/WorkChapter.tsx): the accent taken
-     to a full surface for exactly one chapter. --amber-field is the accent
-     itself; --amber-deep is the gradient falloff and is held deliberately
-     light, because void ink measures 4.84:1 on it and 4.62:1 is the floor
-     where 4.5:1 would break. Do not darken it without re-measuring. Scoped
-     to .work-chapter; every other surface stays dark. */
-  --color-amber-field: #ff6a1a;
-  --color-amber-deep: #d95410;
+  /* Legacy controller aliases: green shell, white faceplate, Mirage controls.
+     The selected button uses secondary orange; geometry stays unchanged. */
+  --color-play-red: var(--color-primary);
+  --color-play-red-deep: var(--color-primary-deep);
+  --color-play-face: var(--color-paper);
+  --color-play-dark: var(--color-mirage);
+
+  /* Legacy work-chapter aliases resolve to primary green with white text. */
+  --color-amber-field: var(--color-primary);
+  --color-amber-deep: var(--color-primary-deep);
 
   --font-display: var(--font-archivo-expanded), "Arial Black", system-ui, sans-serif;
   --font-serif: var(--font-spectral), Georgia, "Times New Roman", serif;
@@ -68,11 +70,11 @@
 
   ::selection {
     background-color: var(--color-accent);
-    color: var(--color-void);
+    color: var(--color-primary-foreground);
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-accent-readable);
     outline-offset: 3px;
     border-radius: 1px;
   }
@@ -239,7 +241,7 @@ html[data-work="cinematic"] .work-static {
 }
 html[data-nav-theme="light"] .site-nav__toggle,
 html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] .site-nav__toggle {
-  color: #0b0d0e;
+  color: var(--color-mirage);
   border-color: inherit;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -251,8 +253,8 @@ html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] .site-nav__togg
 .hero-studio__card {
   border-radius: 18px;
   overflow: hidden;
-  background: #e8e4dc;
-  box-shadow: 0 32px 48px -14px rgb(20 18 14 / 24%), 0 5px 12px rgb(20 18 14 / 7%);
+  background: var(--color-paper);
+  box-shadow: 0 32px 48px -14px rgb(22 35 42 / 24%), 0 5px 12px rgb(22 35 42 / 7%);
 }
 .hero-studio__card img { display: block; width: 100%; height: auto; }
 @media (hover: hover) and (pointer: fine) and (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
@@ -270,7 +272,7 @@ html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] .site-nav__togg
 .hero-studio__slot--detail { right: 3%; bottom: -85px; width: clamp(140px, 14vw, 220px); }
 .hero-studio__slot--detail .hero-studio__card { aspect-ratio: 0.78; }
 .hero-studio__slot--detail img { height: 100%; object-fit: cover; object-position: center; }
-.hero-studio__slot--architecture .hero-studio__card { box-shadow: 0 16px 26px -12px rgb(20 18 14 / 20%); }
+.hero-studio__slot--architecture .hero-studio__card { box-shadow: 0 16px 26px -12px rgb(22 35 42 / 20%); }
 @media (max-width: 1023px) {
   .hero-studio__slot--architecture, .hero-studio__slot--paper, .hero-studio__slot--detail { display: none; }
   .hero-studio__slot--metal { width: 56px; left: 18px; top: 88px; }
@@ -345,7 +347,7 @@ html[data-hero-intro] .site-nav {
 html[data-nav-theme="light"] .site-nav,
 html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] {
   background-color: var(--color-paper);
-  border-color: rgba(11, 13, 16, 0.1);
+  border-color: rgba(22, 35, 42, 0.1);
 }
 html[data-nav-theme="light"] .site-nav__mark,
 html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] .site-nav__mark {
@@ -353,7 +355,7 @@ html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] .site-nav__mark
 }
 html[data-nav-theme="light"] .site-nav ul,
 html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] ul {
-  color: rgba(11, 13, 16, 0.65);
+  color: rgba(22, 35, 42, 0.65);
 }
 html[data-nav-theme="light"] .site-nav ul a:hover,
 html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] ul a:hover {
@@ -490,8 +492,8 @@ html:has(#hero) {
   border-radius: 50%;
   background: radial-gradient(
     ellipse at center,
-    rgba(58, 24, 18, 0.38) 0%,
-    rgba(58, 24, 18, 0.2) 45%,
+    rgba(7, 80, 86, 0.38) 0%,
+    rgba(7, 80, 86, 0.2) 45%,
     transparent 72%
   );
   filter: blur(4px);
@@ -510,9 +512,9 @@ html:has(#hero) {
 .hero-play .hp-ctrl__slice:nth-child(1) { transform: translateZ(-2.5px); }
 .hero-play .hp-ctrl__slice:nth-child(2) { transform: translateZ(-5px); }
 .hero-play .hp-ctrl__slice:nth-child(3) { transform: translateZ(-7.5px); }
-.hero-play .hp-ctrl__slice:nth-child(4) { transform: translateZ(-10px); background: #7c1f13; }
-.hero-play .hp-ctrl__slice:nth-child(5) { transform: translateZ(-12.5px); background: #6f1a10; }
-.hero-play .hp-ctrl__slice:nth-child(6) { transform: translateZ(-15px); background: #61150c; }
+.hero-play .hp-ctrl__slice:nth-child(4) { transform: translateZ(-10px); background: color-mix(in srgb, var(--color-primary) 60%, var(--color-mirage)); }
+.hero-play .hp-ctrl__slice:nth-child(5) { transform: translateZ(-12.5px); background: color-mix(in srgb, var(--color-primary) 45%, var(--color-mirage)); }
+.hero-play .hp-ctrl__slice:nth-child(6) { transform: translateZ(-15px); background: color-mix(in srgb, var(--color-primary) 30%, var(--color-mirage)); }
 /* Top face of the shell. */
 .hero-play .hp-ctrl__body {
   position: absolute;
@@ -520,10 +522,10 @@ html:has(#hero) {
   border-radius: 18px;
   background: linear-gradient(
     180deg,
-    #d8503a 0%,
+    color-mix(in srgb, var(--color-primary) 80%, white) 0%,
     var(--color-play-red) 16%,
     var(--color-play-red) 70%,
-    #a72d1d 100%
+    var(--color-primary-deep) 100%
   );
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32); /* top-edge highlight */
 }
@@ -543,9 +545,9 @@ html:has(#hero) {
   position: absolute;
   inset: 11% 7% 15% 7%;
   border-radius: 12px;
-  background: linear-gradient(180deg, var(--color-play-face), #efe8d5);
+  background: linear-gradient(180deg, var(--color-play-face), color-mix(in srgb, var(--color-paper) 90%, var(--color-mirage)));
   box-shadow:
-    inset 0 2px 4px rgba(11, 13, 16, 0.16),
+    inset 0 2px 4px rgba(22, 35, 42, 0.16),
     inset 0 -1px 0 rgba(255, 255, 255, 0.7);
   transform: translateZ(4px);
 }
@@ -580,10 +582,10 @@ html:has(#hero) {
 .hero-play .hp-cross i {
   position: absolute;
   display: block;
-  background: linear-gradient(180deg, #3a3d45, var(--color-play-dark) 55%, #1d1f24);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-mirage) 80%, white), var(--color-play-dark) 55%, var(--color-mirage));
   border-radius: 5px;
   box-shadow:
-    0 2.5px 3px rgba(11, 13, 16, 0.38),
+    0 2.5px 3px rgba(22, 35, 42, 0.38),
     inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 .hero-play .hp-cross .hp-cross-v {
@@ -607,7 +609,7 @@ html:has(#hero) {
   height: 9px;
   border-radius: 9999px;
   transform: translate(-50%, -50%);
-  background: radial-gradient(circle at 40% 35%, #16181c, #2e3138);
+  background: radial-gradient(circle at 40% 35%, var(--color-mirage), color-mix(in srgb, var(--color-mirage) 85%, white));
   box-shadow: none;
 }
 /* Button travel: ~3px into the housing (along Z now), shadow tightens. */
@@ -618,7 +620,7 @@ html:has(#hero) {
 }
 .hero-play .hp-dpad:active .hp-cross i {
   box-shadow:
-    0 1px 1px rgba(11, 13, 16, 0.42),
+    0 1px 1px rgba(22, 35, 42, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
@@ -669,9 +671,9 @@ html:has(#hero) {
   width: 26px;
   height: 26px;
   border-radius: 9999px;
-  background: radial-gradient(circle at 38% 30%, #40434b, var(--color-play-dark) 55%, #17191d);
+  background: radial-gradient(circle at 38% 30%, color-mix(in srgb, var(--color-mirage) 75%, white), var(--color-play-dark) 55%, var(--color-mirage));
   box-shadow:
-    0 3px 4px rgba(11, 13, 16, 0.4),
+    0 3px 4px rgba(22, 35, 42, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.16);
   transform: translateZ(3px);
   /* Same press physics as the D-pad: fast in, controlled spring out. */
@@ -683,7 +685,7 @@ html:has(#hero) {
 .hero-play .hp-act:active .hp-act__cap {
   transform: translateZ(0px);
   box-shadow:
-    0 1px 1.5px rgba(11, 13, 16, 0.45),
+    0 1px 1.5px rgba(22, 35, 42, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transition-duration: 80ms;
   transition-timing-function: ease-out;
@@ -693,11 +695,11 @@ html:has(#hero) {
    cue for which word is selected, so it has to carry real weight: red on the
    ivory faceplate is 5.3:1, where the previous ivory rim was ~1.1:1. */
 .hero-play .hp-act[data-active="true"] .hp-act__cap {
-  background: radial-gradient(circle at 38% 30%, #e0593f, var(--color-play-red) 58%, #8e2417);
+  background: radial-gradient(circle at 38% 30%, color-mix(in srgb, var(--color-secondary) 80%, white), var(--color-secondary) 58%, color-mix(in srgb, var(--color-secondary) 75%, var(--color-mirage)));
   box-shadow:
     0 0 0 2px var(--color-play-face),
     0 0 0 3px var(--color-play-red-deep),
-    0 3px 4px rgba(11, 13, 16, 0.4),
+    0 3px 4px rgba(22, 35, 42, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.24);
 }
 
@@ -734,12 +736,12 @@ html:has(#hero) {
   .statement.is-sticky::after {
     content: "";
     display: block;
-    height: 100dvh;
+    height: var(--statement-runway, 530dvh);
   }
   .statement.is-sticky .statement__inner {
     position: sticky;
-    top: 4rem;
-    min-height: calc(100dvh - 4rem);
+    top: 0;
+    min-height: 100dvh;
     display: flex;
     align-items: center;
     padding-block: 2rem;
@@ -778,7 +780,7 @@ html:has(#hero) {
 }
 @media (hover: hover) and (pointer: fine) {
   .hcard[data-active="true"] .hcard__link:hover {
-    border-color: rgba(236, 231, 221, 0.28);
+    border-color: rgba(255, 255, 255, 0.28);
   }
   .hcard[data-active="true"] .hcard__link:hover .hcard__cta {
     background-color: var(--color-accent);
@@ -858,7 +860,7 @@ html:has(#hero) {
     background: linear-gradient(
       105deg,
       transparent 0%,
-      rgba(236, 231, 221, 0.5) 50%,
+      rgba(255, 255, 255, 0.5) 50%,
       transparent 100%
     );
     transform: translateX(-160%) skewX(-12deg);
@@ -1113,7 +1115,7 @@ html[data-fluid-cursor="on"]
 /* The section hairline is the seam with the statement above. The portal frame
    is its own boundary, so the rule would only cut across it. */
 #selected-work[data-work-mode="chapter"] {
-  border-top-color: transparent;
+  border-top-width: 0;
 }
 
 /* The rail. Card width is owned here; WorkRail measures it back out of the
@@ -1129,9 +1131,29 @@ html[data-fluid-cursor="on"]
    The lasting fix is asset-side: export covers at 4:3, or keep their subject
    inside the middle 75 percent. */
 .work-rail {
-  --rail-card: min(52vw, 720px, calc((100dvh - 28rem) * 1.3333));
+  --rail-card: min(44vw, 600px, max(320px, calc((100dvh - 28rem) * 1.2)));
   --rail-gap: 2.5rem;
   color: var(--color-void);
+  background: var(--color-amber-field);
+}
+.work-chapter { background: var(--color-primary); color: var(--color-primary-foreground); }
+.statement-highlight {
+  color: var(--color-primary);
+}
+.statement-portal, .work-chapter, .work-chapter .work-rail {
+  background-color: var(--color-primary);
+  background-image: none;
+}
+.work-chapter .work-rail { color: var(--color-primary-foreground); }
+.work-chapter .work-rail__card p { color: rgb(255 255 255 / .85); }
+.work-chapter .work-rail__badge { color: white; border-color: rgb(255 255 255 / .35); }
+.text-accent { color: var(--color-accent-readable); }
+.bg-accent, .hover\:bg-accent:hover { color: var(--color-primary-foreground); }
+@media (prefers-reduced-motion: no-preference) {
+  /* Enter sooner over the already-filled amber, without a fade or lift. */
+  .statement.is-sticky + #selected-work[data-work-mode="chapter"] {
+    margin-top: -35dvh;
+  }
 }
 @media (max-width: 1023px) {
   .work-rail {
@@ -1139,11 +1161,25 @@ html[data-fluid-cursor="on"]
     --rail-gap: 1.25rem;
   }
 }
-/* Padding centres card 0; translating by whole slots centres the rest. */
+/* Match the heading gutter instead of centering the first card. */
 .work-rail__list {
-  padding-inline: calc(50vw - var(--rail-card) / 2);
+  padding-inline: 1rem;
   gap: var(--rail-gap);
 }
+@media (min-width: 640px) {
+  .work-rail__list { padding-inline: 2rem; }
+}
+@media (min-width: 1024px) {
+  .work-rail__list { padding-inline: max(5rem, calc((100vw - 1400px) / 2)); }
+}
+.work-rail[data-rail-mode="scroll"] .work-rail__list { width: max-content; }
+.work-rail__stage { padding-block: 48px; }
+.work-rail__stage .work-rail__list { margin-top: 32px; flex-shrink: 0; }
+.work-rail__stage .work-rail__heading { flex-shrink: 0; }
+.work-rail__stage .work-rail__media { width: 100%; max-height: var(--rail-media-height); }
+.work-rail__stage .work-rail__card h3 { margin-top: 24px; min-height: var(--rail-title-height); }
+.work-rail__stage .work-rail__card p { margin-top: 14px; min-height: var(--rail-copy-height); }
+.work-rail__stage .work-rail__card ul { margin-top: 16px; }
 .work-rail__card {
   flex: 0 0 var(--rail-card);
   width: var(--rail-card);
@@ -1172,15 +1208,11 @@ html[data-fluid-cursor="on"]
   color: var(--color-void);
 }
 /* The static rail: server render, touch, narrow, reduced motion. A native
-   horizontal scroller with snap points and no visible scrollbar. */
+   horizontal scroller without snapping or a visible scrollbar. */
 .work-rail--static .work-rail__list {
   overflow-x: auto;
-  scroll-snap-type: x mandatory;
   scrollbar-width: none;
 }
 .work-rail--static .work-rail__list::-webkit-scrollbar {
   display: none;
-}
-.work-rail--static .work-rail__card {
-  scroll-snap-align: center;
 }

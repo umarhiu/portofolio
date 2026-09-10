@@ -25,7 +25,7 @@ export function Contact() {
         <div className="mt-10 flex flex-col gap-6 sm:flex-row sm:items-center">
           <MagneticButton
             href={`mailto:${site.email}`}
-            className="cta inline-flex w-fit items-center gap-2 bg-accent px-7 py-3.5 font-mono text-xs uppercase tracking-widest text-void"
+            className="cta inline-flex w-fit items-center gap-2 bg-accent px-7 py-3.5 font-mono text-xs uppercase tracking-widest text-primary-foreground"
           >
             Start a conversation
           </MagneticButton>

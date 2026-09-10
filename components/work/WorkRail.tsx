@@ -7,7 +7,7 @@ import {
   useMotionValueEvent,
   useReducedMotion,
   useScroll,
-  useSpring,
+  useMotionValue,
   useTransform,
 } from "motion/react";
 import { projects, type Project } from "@/lib/content";
@@ -15,9 +15,9 @@ import { projects, type Project } from "@/lib/content";
 /*
   The horizontal rail of case files, shown once the portal has flooded the
   screen amber. Big image-first cards (cover, title, one-line outcome, two
-  badges), one centred with its neighbours peeking at both edges. Scrolling the
-  page drives the rail sideways one card per viewport of scroll, snapping card
-  to card on a spring, and the eyebrow counts the centred card.
+  badges), starting at the heading's left gutter. Page scrolling moves the rail
+  continuously, one horizontal pixel per vertical pixel, without snapping or
+  a second spring. The eyebrow tracks the leading card.
 
   Built on Motion, which is already in the home bundle, so this adds no GSAP
   and no code-split island. Pinning is CSS position: sticky on a tall track,
@@ -26,7 +26,7 @@ import { projects, type Project } from "@/lib/content";
   Enhancement is gated exactly like SmoothScroll and the old cinematic: a fine
   pointer, a desktop width and motion allowed. Everyone else, and the server
   render, gets the same cards in a plain horizontally scrollable row with
-  native snap points, so the content is byte-identical and reachable without
+  no forced snap points, so the content is byte-identical and reachable without
   JavaScript. The gate is a mount effect, never the SSR output, so it cannot
   cause a hydration mismatch.
 
@@ -43,7 +43,7 @@ import { projects, type Project } from "@/lib/content";
 
 const N = projects.length;
 const CAPABLE_QUERY =
-  "(prefers-reduced-motion: no-preference) and (pointer: fine) and (min-width: 1024px)";
+  "(prefers-reduced-motion: no-preference) and (pointer: fine) and (min-width: 1024px) and (min-height: 700px)";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -85,11 +85,11 @@ function Card({
         <h3
           className="mt-7 font-display font-extrabold uppercase leading-[1.02] tracking-tight"
           style={{
-            fontSize: "clamp(1.6rem, 2.6vw, 2.75rem)",
+            fontSize: "clamp(1.4rem, 2.1vw, 2rem)",
             viewTransitionName: `title-${project.slug}`,
           }}
         >
-          {project.title}
+          {project.cardTitle ?? project.title}
         </h3>
         <p
           className="mt-4 max-w-[52ch] text-void/80"
@@ -108,7 +108,7 @@ function Card({
 
 function Heading({ current }: { current: number }) {
   return (
-    <div className="px-4 sm:px-8 lg:px-20">
+    <div className="work-rail__heading px-4 sm:px-8 lg:px-20">
       <div className="mx-auto max-w-[1400px]">
         <p className="mb-4 font-mono text-xs uppercase tracking-[0.22em]">
           <span className="tabular" aria-live="polite" aria-atomic="true">
@@ -128,7 +128,7 @@ function Heading({ current }: { current: number }) {
   );
 }
 
-/** Server render, touch, narrow, reduced motion: a native snap scroller. */
+/** Server render, touch, narrow, reduced motion: a native horizontal scroller. */
 function RailStatic() {
   return (
     <div className="work-rail work-rail--static py-24 lg:py-32" data-rail-mode="static">
@@ -142,14 +142,15 @@ function RailStatic() {
   );
 }
 
-/** Capable desktop: the page scroll drives the rail, one card per viewport. */
+/** Capable desktop: continuous, one-to-one vertical-to-horizontal scrolling. */
 function RailScroll() {
   const track = useRef<HTMLDivElement>(null);
   const list = useRef<HTMLUListElement>(null);
   const [index, setIndex] = useState(0);
+  const distance = useMotionValue(0);
+  const [travel, setTravel] = useState(0);
 
-  // One viewport of scroll per card: the track is N viewports tall and the
-  // stage is one, so progress 0..1 spans exactly N-1 card steps.
+  // The track adds exactly the overflow distance to the sticky viewport.
   const { scrollYProgress } = useScroll({
     target: track,
     offset: ["start start", "end end"],
@@ -162,26 +163,50 @@ function RailScroll() {
     const first = ul?.firstElementChild as HTMLElement | null;
     if (!ul || !first) return;
     const measure = () => {
+      const stage = track.current?.querySelector<HTMLElement>(".work-rail__stage");
+      if (stage) {
+        const contentHeight = (selector: string) => Math.max(0, ...Array.from(ul.querySelectorAll<HTMLElement>(selector), el => {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          return Math.ceil(range.getBoundingClientRect().height);
+        }));
+        // Equal text rows reserve room for the longest real title/outcome,
+        // rather than guessing that every project fits on two lines.
+        const title = contentHeight("h3");
+        const copy = contentHeight("p");
+        const badges = Math.max(...Array.from(ul.querySelectorAll<HTMLElement>('ul[aria-label="Tags"]'), el => el.offsetHeight));
+        stage.style.setProperty("--rail-title-height", `${title}px`);
+        stage.style.setProperty("--rail-copy-height", `${copy}px`);
+        const css = getComputedStyle(stage);
+        const heading = stage.querySelector<HTMLElement>(".work-rail__heading")!.offsetHeight;
+        const available = stage.clientHeight - parseFloat(css.paddingTop) - parseFloat(css.paddingBottom)
+          - heading - 32 - title - copy - badges - 54;
+        stage.style.setProperty("--rail-media-height", `${Math.max(100, Math.floor(available))}px`);
+      }
       const gap = parseFloat(getComputedStyle(ul).columnGap) || 0;
       slot.current = first.getBoundingClientRect().width + gap;
+      const overflow = Math.max(0, ul.scrollWidth - window.innerWidth);
+      distance.set(overflow);
+      setTravel(overflow);
     };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(first);
+    ro.observe(ul);
     window.addEventListener("resize", measure);
+    document.fonts.addEventListener("loadingdone", measure);
     return () => {
       ro.disconnect();
       window.removeEventListener("resize", measure);
+      document.fonts.removeEventListener("loadingdone", measure);
     };
-  }, []);
+  }, [distance]);
 
-  const snapped = useTransform(scrollYProgress, (p) =>
-    Math.min(N - 1, Math.max(0, Math.round(p * (N - 1)))),
-  );
-  const xTarget = useTransform(snapped, (i) => -i * slot.current);
-  // The snap glide. Underdamped enough to feel like a carousel settling.
-  const x = useSpring(xTarget, { stiffness: 150, damping: 26, mass: 0.9 });
-  useMotionValueEvent(snapped, "change", (i) => setIndex(i));
+  const transform = useTransform(() => `translateX(${-scrollYProgress.get() * distance.get()}px)`);
+  useMotionValueEvent(scrollYProgress, "change", (p) => {
+    setIndex(p >= .999 ? N - 1 : Math.min(N - 1,
+      Math.floor(p * distance.get() / Math.max(1, slot.current))));
+  });
 
   // Keyboard reach: focusing a card that is not centred scrolls the page so it
   // is. Guarded on :focus-visible so a pointer click never yanks the scroll.
@@ -189,22 +214,22 @@ function RailScroll() {
     if (!track.current) return;
     if (!event.currentTarget.matches(":focus-visible")) return;
     const top = window.scrollY + track.current.getBoundingClientRect().top;
-    window.scrollTo({ top: top + i * window.innerHeight, behavior: "auto" });
+    window.scrollTo({ top: top + Math.min(i * slot.current, distance.get()), behavior: "auto" });
   };
 
   return (
     <div
       ref={track}
       className="work-rail"
-      style={{ height: `${N * 100}dvh` }}
+      style={{ height: `calc(100dvh + ${travel}px)` }}
       data-rail-mode="scroll"
       data-rail-index={index}
     >
-      <div className="sticky top-0 flex h-[100dvh] flex-col justify-center overflow-hidden pt-16">
+      <div className="work-rail__stage sticky top-0 flex h-[100dvh] flex-col justify-center overflow-hidden">
         <Heading current={index + 1} />
         <motion.ul
           ref={list}
-          style={{ x }}
+          style={{ transform }}
           className="work-rail__list mt-10 flex items-start will-change-transform"
         >
           {projects.map((project, i) => (

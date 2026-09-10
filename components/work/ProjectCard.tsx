@@ -54,13 +54,13 @@ export function ProjectCard({
       }
       className={
         "work-card group block border border-hairline " +
-        (compact ? "p-5 " : "bg-[rgba(236,231,221,0.02)] p-6 ") +
+        (compact ? "p-5 " : "bg-[color-mix(in_srgb,var(--color-paper)_2%,transparent)] p-6 ") +
         className
       }
     >
       <div
         className={
-          "relative overflow-hidden border border-hairline bg-[rgba(236,231,221,0.02)] " +
+          "relative overflow-hidden border border-hairline bg-[color-mix(in_srgb,var(--color-paper)_2%,transparent)] " +
           (compact ? "mb-4 h-[clamp(72px,11vh,140px)]" : "mb-6 aspect-[16/10]")
         }
       >

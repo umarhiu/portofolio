@@ -41,7 +41,7 @@ export function HorizontalCard({
       }}
     >
       {/* Media (left): the cover image if set, else the type label. */}
-      <div className="relative w-1/2 overflow-hidden border-r border-hairline bg-[rgba(236,231,221,0.02)]">
+      <div className="relative w-1/2 overflow-hidden border-r border-hairline bg-[color-mix(in_srgb,var(--color-paper)_2%,transparent)]">
         {project.cover ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
