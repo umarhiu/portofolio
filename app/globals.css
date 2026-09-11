@@ -277,7 +277,44 @@ html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] .site-nav__togg
   .site-nav__mark, .site-nav__links li { transition: none; }
 }
 .hero-studio * { pointer-events: none !important; }
-.hero-studio__slot { position: absolute; width: clamp(110px, 11vw, 180px); }
+/* Two knobs drive the whole composition, so there is one place to retune it
+   and the five cards can never fall out of proportion with each other.
+
+   --studio-unit is a two-slope fluid curve. A min() of a steep and a shallow
+   line is a piecewise function in one expression: 17vw holds the laptop
+   composition exactly as it was up to 1600px, where the two lines cross, then
+   5vw + 192px keeps it growing, just more slowly, instead of freezing. The
+   old per-slot clamp maxima all topped out around 1550 to 1625px, so past
+   that every card was pinned in px while the screen kept growing and its
+   share halved: metal measured 16 percent of the viewport at 1440px and
+   6.6 percent at 3840px.
+
+   320px is not an arbitrary ceiling. The sources are 640px wide and are
+   served as plain <img> with no srcset, so 320 CSS px is exactly 2x and the
+   last size that does not upsample on a retina display. Going beyond it
+   needs regenerated assets, not a CSS edit.
+
+   --studio-rail is the gap from the hero edge to the content column, which is
+   max-w-[1200px] centred. Anchoring the cards to that column instead of to
+   the viewport is the real fix: at 3440px the column starts at x=1120 while
+   left: 2% put a card at x=69, over a thousand pixels adrift, and that gap is
+   what read as small and isolated. Use 50%, never 50vw, because 50% resolves
+   against this element's box, which is the same box the column is centred in,
+   so a scrollbar cannot make the two disagree. The 88px floor holds the
+   laptop composition together below 1376px, where there is no margin outside
+   the column left to anchor to.
+
+   It also revives the pointer parallax for free. HeroStudio.tsx fades the
+   response to zero at 700px from the pointer, so today at 1920px and wider
+   the cards never move at all (metal sits 717px from centre). Anchored to the
+   column that distance settles at about 500px at every width, which is what
+   1440px already produces, so they move again with no change to depth or to
+   that radius. */
+.hero-studio {
+  --studio-unit: clamp(175px, min(17vw, 5vw + 192px), 320px);
+  --studio-rail: max(88px, calc(50% - 600px));
+}
+.hero-studio__slot { position: absolute; width: var(--studio-unit); }
 .hero-studio__card {
   border-radius: 18px;
   overflow: hidden;
@@ -293,26 +330,130 @@ html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] .site-nav__togg
   }
   .hero-studio__slot[data-hovered] .hero-studio__card { scale: 1.05; }
 }
-.hero-studio__slot--architecture { left: 2%; top: 165px; width: clamp(85px, 8.5vw, 135px); }
-.hero-studio__slot--metal { left: 6%; top: 15px; width: clamp(165px, 16vw, 255px); z-index: 2; }
-.hero-studio__slot--paper { left: 2%; bottom: -80px; width: clamp(175px, 17vw, 275px); }
-.hero-studio__slot--acrylic { right: 4%; top: -12px; width: clamp(120px, 12vw, 195px); }
-.hero-studio__slot--detail { right: 3%; bottom: -85px; width: clamp(140px, 14vw, 220px); }
+/* Each slot is a multiple of the unit, offset outboard of the rail. The
+   factors were solved from the 1440px build, so the laptop composition lands
+   within about 2px of where it has always been. Vertical offsets are unit
+   multiples too, for the reason docs/feedback.md lesson 18 records: a
+   decoration pinned with fixed px rides into the text as the viewport
+   changes, so it has to track the same anchor the rest of the composition
+   does. */
+.hero-studio__slot--architecture {
+  width: calc(var(--studio-unit) * 0.49);
+  left: calc(var(--studio-rail) - var(--studio-unit) * 0.37);
+  top: calc(var(--studio-unit) * 0.674);
+}
+.hero-studio__slot--metal {
+  width: calc(var(--studio-unit) * 0.93);
+  left: calc(var(--studio-rail) - var(--studio-unit) * 0.14);
+  top: calc(var(--studio-unit) * 0.061);
+  z-index: 2;
+}
+.hero-studio__slot--paper {
+  width: calc(var(--studio-unit) * 1);
+  left: calc(var(--studio-rail) - var(--studio-unit) * 0.37);
+  bottom: calc(var(--studio-unit) * -0.327);
+}
+.hero-studio__slot--acrylic {
+  width: calc(var(--studio-unit) * 0.71);
+  right: calc(var(--studio-rail) - var(--studio-unit) * 0.26);
+  top: calc(var(--studio-unit) * -0.049);
+}
+.hero-studio__slot--detail {
+  width: calc(var(--studio-unit) * 0.8);
+  right: calc(var(--studio-rail) - var(--studio-unit) * 0.31);
+  bottom: calc(var(--studio-unit) * -0.347);
+}
 .hero-studio__slot--detail .hero-studio__card { aspect-ratio: 0.78; }
 .hero-studio__slot--detail img { height: 100%; object-fit: cover; object-position: center; }
 .hero-studio__slot--architecture .hero-studio__card { box-shadow: 0 16px 26px -12px rgb(0 0 0 / 17%); }
+/* Below the desktop gate all five cards move to the bottom edge and scatter,
+   instead of two of them sitting in the top corners and three being hidden.
+   Showing the other three costs nothing: every one of the five <img> tags
+   already renders and downloads at every width, and display:none never saved
+   the bytes.
+
+   The band is a function of viewport HEIGHT, not width. The shell centres its
+   content with justify-center, so the free space below the CTA row is
+   (100dvh - 657px) / 2 plus the 32px of pb-8. Measured: 32px at 640 tall,
+   73px at 740, 125px at 844, 169px at 932. At 640 the content alone is
+   already taller than the viewport, so 32px of bottom padding is the whole
+   budget and the unit floors out there.
+
+   So each card bleeds off the bottom by a set fraction of itself and only a
+   sliver stays in the band. .hero-studio is overflow: clip and is inset:0 of
+   the shell, so the overhang is cut exactly at the shell's bottom edge
+   (verified), which is what makes the bleed read as deliberate rather than as
+   a card falling out of the layout. The bleed fractions are chosen so the
+   tallest visible sliver is under 30px even at the 52px floor, which keeps
+   every card clear of the CTA buttons on the shortest phone.
+
+   Widths, bleeds and the JS rotations (-6, -13, -8, 8, 17 degrees) are all
+   different per card on purpose: the ask was a scattered arrangement, not a
+   row. */
 @media (max-width: 1023px) {
-  .hero-studio__slot--architecture, .hero-studio__slot--paper, .hero-studio__slot--detail { display: none; }
-  .hero-studio__slot--metal { width: 56px; left: 18px; top: 88px; }
-  .hero-studio__slot--acrylic { width: 56px; right: 18px; top: 88px; bottom: auto; }
+  .hero-studio {
+    /* Bounded on BOTH axes. Height alone put a 150px card on a 390px phone
+       (38 percent of the screen), because a tall narrow phone has a generous
+       band but no width to spend it on. 21vw keeps the largest card just
+       inside a fifth of a narrow screen; the height term still governs on
+       short phones, where the band runs out first. */
+    --studio-unit: clamp(52px, min(56dvh - 320px, 21vw), 150px);
+
+    /* The free space below the CTA row, derived rather than guessed. The
+       shell centres its content, so the leftover is (100dvh - 657px) / 2,
+       plus the 32px of pb-8. Measured against the live page: 32px at 640
+       tall, 73px at 740, 125px at 844, 169px at 932. The 32px floor is the
+       padding alone, which is all there is at 640 where the content is
+       already taller than the viewport. The 210px ceiling stops a tall
+       tablet lifting the cards up into the buttons. */
+    --studio-band: clamp(32px, calc(50dvh - 296px), 210px);
+  }
+  /* Each card is placed by how much of the BAND it occupies, not by a fixed
+     bleed. Its top edge sits --studio-band * k above the shell bottom, and k
+     is under 1 for all five, so no card can ever reach the CTA row whatever
+     the height. On a tall phone the band is deeper than the cards, so they
+     sit fully visible at five different heights; on a 640px phone the band
+     collapses to 32px and the same rule bleeds them off the bottom edge
+     instead, where overflow: clip cuts them cleanly. One expression, and the
+     scatter survives both ends. */
+  .hero-studio__slot { top: auto; }
+  .hero-studio__slot--architecture {
+    width: calc(var(--studio-unit) * 0.58);
+    left: -3%;
+    bottom: calc(var(--studio-band) * 0.62 - var(--studio-unit) * 0.58);
+  }
+  .hero-studio__slot--metal {
+    width: calc(var(--studio-unit) * 1);
+    left: 9%;
+    bottom: calc(var(--studio-band) * 0.9 - var(--studio-unit) * 1);
+  }
+  .hero-studio__slot--paper {
+    width: calc(var(--studio-unit) * 0.84);
+    left: 37%;
+    bottom: calc(var(--studio-band) * 0.78 - var(--studio-unit) * 0.84);
+  }
+  .hero-studio__slot--acrylic {
+    width: calc(var(--studio-unit) * 0.66);
+    right: 19%;
+    bottom: calc(var(--studio-band) * 0.86 - var(--studio-unit) * 0.66);
+  }
+  /* detail is the one portrait card (aspect-ratio 0.78), so its height is
+     1.28 times its width and the subtraction has to use that, not the width. */
+  .hero-studio__slot--detail {
+    width: calc(var(--studio-unit) * 0.6);
+    right: -3%;
+    bottom: calc(var(--studio-band) * 0.7 - var(--studio-unit) * 0.77);
+  }
   .hero-studio__card { border-radius: 8px; }
 }
+/* A short laptop has no vertical room for the full composition, so the unit
+   shrinks rather than each slot being hand-set in px as it was before. This
+   reproduces the old short-viewport sizes (metal was 140px; 22dvh of 680 is
+   150, times 0.93, is 139) while keeping every proportion and both anchors
+   intact. Correction 16 in docs/feedback.md is this exact failure being
+   reported on a short laptop, so the case is load-bearing. */
 @media (min-width: 1024px) and (max-height: 700px) {
-  .hero-studio__slot--architecture { top: 105px; width: 75px; }
-  .hero-studio__slot--metal { top: 0; left: 4%; width: 140px; }
-  .hero-studio__slot--paper { bottom: -80px; width: 160px; }
-  .hero-studio__slot--acrylic { top: -10px; width: 120px; }
-  .hero-studio__slot--detail { bottom: -80px; width: 130px; }
+  .hero-studio { --studio-unit: clamp(120px, 22dvh, 190px); }
 }
 .hero-shell {
   min-height: 100svh;
