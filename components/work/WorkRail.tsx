@@ -14,7 +14,7 @@ import { projects, type Project } from "@/lib/content";
 
 /*
   The horizontal rail of case files, shown once the portal has flooded the
-  screen amber. Big image-first cards (cover, title, one-line outcome, two
+  screen violet. Big image-first cards (cover, title, one-line outcome, two
   badges), starting at the heading's left gutter. Page scrolling moves the rail
   continuously, one horizontal pixel per vertical pixel, without snapping or
   a second spring. The eyebrow tracks the leading card.

@@ -3,7 +3,7 @@
  *
  * WORK_CHAPTER selects which Selected Work implementation renders:
  *
- *   "chapter"    the amber portal chapter with the horizontal carousel
+ *   "chapter"    the violet portal chapter with the horizontal carousel
  *   "cinematic"  the original vertical sticky card stack, kept for comparison
  *
  * Exactly one may be in the tree at a time. Both render every project with the

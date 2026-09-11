@@ -32,11 +32,11 @@ These are pass/fail. A build that misses any of these is not done.
 1. **No em-dashes** anywhere in copy, labels, captions, or alt text.
 2. **Full reduced-motion fallback** and **full no-WebGL fallback**, both with **byte-identical copy** to the live hero, both server-rendered.
 3. **Keyboard operable hero.** Focusable per-state anchors that move focus and drive the timeline to each snap point, plus a skip-hero link past the entire pinned region.
-4. **WCAG AA contrast** at every size used, verified for amber and blue against the void and vellum, including the drei `Html` labels at every Z depth.
+4. **WCAG AA contrast** at every size used, verified on rendered pixels against every surface the type actually lands on (black page, white hero, violet chapter), including the drei `Html` labels at every Z depth.
 5. **LCP under 2.5s**, with server-rendered display text as the first paint and the largest contentful element. The canvas is never the LCP element. This is proven in lab (throttled mobile), not assumed.
 6. **CLS near zero.** Hero height reserved; fonts self-hosted with reserved metrics; canvas dimensions fixed.
 7. **Motivated motion only.** Every animation answers to hierarchy, storytelling, feedback, or state transition. No infinite decorative loops. The one allowed idle is a 1-2px hero float, which stops under reduced motion.
-8. **One accent per viewport.** Signal Amber appears on roughly one element at a time so it always means "this is live, selected, or important."
+8. **One accent per viewport.** Lime appears on roughly one element at a time so it always means "this is live, selected, or important."
 9. **No window scroll listeners and no React-state scroll tracking.** GSAP ScrollTrigger owns scroll; continuous values use Motion motion values.
 10. **One theme, locked dark.** No section inverts to a light mode mid-page.
 
@@ -46,19 +46,25 @@ These are pass/fail. A build that misses any of these is not done.
 
 ### 3.1 Color
 
-Off-black base, one locked accent, contained structural blue. No purple. No gradients on text or large surfaces. Shadows are tinted to the void, never pure black.
+> **Superseded.** This section described the original amber and drafting-blue
+> system, including a "no purple" rule that the shipped palette deliberately
+> breaks. The authority is [`palette.md`](./palette.md), and the token table in
+> [`design.md`](./design.md) section 2. The paragraphs below are kept for the
+> reasoning they record, not for their values.
 
-| Token | Hex | Role and usage |
+Black base, one locked accent, one structural surface colour. No gradients on text or large surfaces, with one documented exception (the work chapter field). Shadows are black, and their alphas are scaled down about 14% from the old void-tinted values because black at the same alpha reads heavier.
+
+| Token | Value | Role and usage |
 |---|---|---|
-| `--void` | `#0B0D10` | All section backgrounds sitewide. The stage. Off-black with a faint blue-graphite cast. |
-| `--vellum` | `#ECE7DD` | Primary headlines, layer surfaces, serif body. Warm paper-white so panels read as drafted vellum, not cold screen-white. |
-| `--graphite` | `#7E848F` | Secondary text, mono labels, captions. Lightened from the original `#6B7079` (which measured ~3.9:1 on the void, below AA) to ~5.2:1 so small mono labels pass WCAG AA. |
-| `--layer-glass` | `rgba(236,231,221,0.04)` | Fill for every floating plane, over the void. |
-| `--hairline` | `#2A2E34` | 1px edges on planes and rules. |
-| `--accent` (Signal Amber) | `#FF6A1A` | The locked accent. Allowed on exactly these roles and nowhere else: the active-layer indicator, the live cursor focus ring, the single primary CTA, the scroll-rail current-state marker, and the single key metric per case study. Roughly one element per viewport. |
-| `--drafting-blue` | `#3A5A78` | Contained structural color. Lives only inside the grid/foundation layer's blueprint lattice. It is a material inside one object, never a UI accent, and never competes with amber. |
+| `--color-void` | `#000000` | All section backgrounds sitewide. The stage. |
+| `--color-vellum` | `#FFFFFF` | Display headings, and pure white as a surface. |
+| `--color-ink-body` | `white / 87%` | Body copy. Pure white on pure black is 21:1 and halates over paragraphs; this is 15.61:1. |
+| `--color-graphite` | `white / 60%` | Secondary text, mono labels, captions. 7.84:1. |
+| `--color-hairline` | `white / 24%` | 1px edges and rules. 1.93:1, so decorative only: a boundary that means something owes 3:1. |
+| `--color-accent` (lime) | `#C6FF34` | The locked accent. Roughly one element per viewport. 17.75:1 on the page and 1.18:1 on white, so it never lands on paper. |
+| `--color-violet` | `#7E3BED` | Structural surface colour: the controller shell and the work chapter field. At 3.74:1 on black it is under the body floor, so it is never an accent and never a small object on black. |
 
-Contrast: verify amber and blue pass WCAG AA at the exact sizes used, against both void and vellum, before Phase 1 sign-off. Amber is never the sole carrier of meaning; it always pairs with a mono label or a shape.
+Contrast: the full measured matrix is in [`palette.md`](./palette.md). The accent is never the sole carrier of meaning; it always pairs with a mono label or a shape.
 
 Tokens are declared once in a Tailwind v4 `@theme` block in `globals.css` as CSS variables, so JavaScript can read the exact same hex via `getComputedStyle`. The offscreen canvases that texture the 3D layers must draw with these read-from-CSS values so there is zero palette drift between the WebGL hero and the SSR fallback.
 

@@ -250,7 +250,11 @@ export function mountFluidCursor(): { destroy: () => void } {
     // ---- Reads. All layout queries happen here, before any write. ---------
     if (dirty) {
       dirty = false;
-      if (seen) resolve(document.elementFromPoint(px, py));
+      if (seen) {
+        const under = document.elementFromPoint(px, py);
+        resolve(under);
+        surface(under);
+      }
     }
     if (target) {
       // A locked element can scroll, animate, or be swapped out from under a
@@ -372,6 +376,38 @@ export function mountFluidCursor(): { destroy: () => void } {
   }
 
   // ---- Events -------------------------------------------------------------
+  /*
+    Which backdrop the cursor is over, so the blend mode can stand down.
+
+    The cursor is white under mix-blend-mode: exclusion, which inverts its
+    backdrop. Over the black page and the white hero that resolves to 21:1
+    both ways, which is why one blend has always been enough. The violet
+    chapter is the case the blend cannot serve: exclusion renders the ring
+    #81c412 there, 2.63:1 against the field, under the 3:1 a pointer owes.
+    On those surfaces the blend is switched off and the plain white cursor
+    is used instead, which is 5.62:1 on violet.
+
+    The cover images are the exception inside the exception. They sit on the
+    field but they are not the field: they run from near-white to near-black,
+    which is precisely the case an inverting blend handles and a fixed colour
+    cannot. Standing the blend down over them measured 1.23:1 on a light
+    cover. So the flag means "over the flat violet", not "inside the chapter".
+
+    This rides the elementFromPoint the reads block already does, so it is
+    the element genuinely under the cursor and costs no extra layout. It
+    writes only on change, like the hero's nav theme.
+  */
+  const surface = (under: Element | null) => {
+    const onField =
+      under?.closest(".work-chapter, .statement-portal") &&
+      !under.closest(".work-rail__media");
+    const next = onField ? "violet" : "";
+    const root = document.documentElement;
+    if ((root.dataset.cursorSurface ?? "") === next) return;
+    if (next) root.dataset.cursorSurface = next;
+    else delete root.dataset.cursorSurface;
+  };
+
   const onMove = (event: PointerEvent) => {
     if (event.pointerType !== "mouse") {
       // Touch and pen have no cursor to stand in for.
@@ -387,7 +423,13 @@ export function mountFluidCursor(): { destroy: () => void } {
       ry = py;
     }
     alphaTarget = 1;
-    resolve(event.target as Element | null);
+    const under = event.target as Element | null;
+    resolve(under);
+    // Also here, not only in the dirty block: a pointer move does not set
+    // dirty (it resolves straight off event.target), so without this the
+    // flag would only ever update on scroll and would go stale the moment
+    // the pointer crossed onto or off the field without one.
+    surface(under);
     wake();
   };
 
@@ -474,6 +516,7 @@ export function mountFluidCursor(): { destroy: () => void } {
       document.documentElement.removeEventListener("pointerenter", onEnter);
       delete document.documentElement.dataset.fluidCursor;
       delete document.documentElement.dataset.fluidCursorMode;
+      delete document.documentElement.dataset.cursorSurface;
       ring.remove();
       dot.remove();
       ripple.remove();

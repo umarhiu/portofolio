@@ -631,7 +631,7 @@ export const positioning = {
   /*
     Split so the payoff can be accented and kept unbreakable. `accent` is the
     single point of emphasis this viewport is allowed, per the one-accent rule
-    in docs/design.md, and it renders amber on void at 6.8:1.
+    in docs/design.md, and it renders lime on black at 17.75:1.
 
     The wording is measured, not arbitrary. This column fits about ten uppercase
     characters per line at 64px, so a line holds one word. "Most prototypes are

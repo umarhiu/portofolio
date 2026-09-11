@@ -50,14 +50,14 @@ export function HeroStatic() {
           <a
             data-hero-enter="primary"
             href={hero.ctas.primary.href}
-            className="inline-flex min-h-11 w-full max-w-[280px] items-center justify-center bg-primary px-6 py-3 font-mono text-xs uppercase tracking-[0.18em] text-primary-foreground transition-opacity duration-200 hover:opacity-85 sm:w-auto sm:max-w-none"
+            className="inline-flex min-h-11 w-full max-w-[280px] items-center justify-center bg-violet px-6 py-3 font-mono text-xs uppercase tracking-[0.18em] text-on-violet transition-opacity duration-200 hover:opacity-85 sm:w-auto sm:max-w-none"
           >
             {hero.ctas.primary.label}
           </a>
           <a
             data-hero-enter="secondary"
             href={hero.ctas.secondary.href}
-            // border-void/50 = 3.6:1 on white, clearing the 3:1 non-text
+            // border-void/50 = 3.95:1 on white, clearing the 3:1 non-text
             // minimum for the outline that identifies this button.
             className="inline-flex min-h-11 w-full max-w-[280px] items-center justify-center border border-void/50 px-6 py-3 font-mono text-xs uppercase tracking-[0.18em] text-void transition-colors duration-200 hover:border-void sm:w-auto sm:max-w-none"
           >

@@ -65,7 +65,7 @@ export function HorizontalCard({
           <span className="text-accent">
             {num} / {tot}
           </span>
-          {/* One amber accent per card: the index. Depth stays graphite here
+          {/* One lime accent per card: the index. Depth stays graphite here
               (its DEEP DIVE / BRIEF wording carries the distinction). */}
           <span className="text-graphite">{project.depth}</span>
         </div>
@@ -98,7 +98,7 @@ export function HorizontalCard({
           {project.context}
         </p>
         {/* Click cue: revealed by globals.css only on the active (front) card,
-            fills amber on hover. The whole card is the link; this is the prompt. */}
+            fills lime on hover. The whole card is the link; this is the prompt. */}
         <span className="hcard__cta mt-7 inline-flex w-fit items-center gap-2 border border-vellum/30 px-4 py-2 font-mono text-xs uppercase tracking-[0.18em] text-vellum">
           View case file
           <ArrowUpRight className="hcard__arrow" size={14} strokeWidth={1.5} aria-hidden="true" />

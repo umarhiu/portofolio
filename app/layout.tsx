@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Archivo, Spectral, JetBrains_Mono } from "next/font/google";
 import { ViewTransitions } from "next-view-transitions";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -61,6 +61,18 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
+/*
+  The browser chrome colour. Nothing set this before, so mobile Safari and
+  Chrome painted their bars with their own default rather than the page, which
+  read as a seam above a full-bleed black page. It is black at every scheme
+  because the site is a locked dark theme: the white hero is a surface inside
+  it, not a light mode.
+*/
+export const viewport: Viewport = {
+  themeColor: "#000000",
+  colorScheme: "dark",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -78,7 +90,7 @@ export default function RootLayout({
           {/* #main exists on every route, unlike the home-only #selected-work. */}
           <a
             href="#main"
-            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-accent focus:px-4 focus:py-2 focus:font-mono focus:text-sm focus:uppercase focus:tracking-wider focus:text-primary-foreground"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-accent focus:px-4 focus:py-2 focus:font-mono focus:text-sm focus:uppercase focus:tracking-wider focus:text-on-accent"
           >
             Skip to content
           </a>

@@ -13,31 +13,42 @@ follows the same rule.
 
 ## 1. Principles
 
+- **Four colours, nothing else.** Black, white, violet, lime. Every other value
+  in the system is one of those four at some alpha. See
+  [`palette.md`](./palette.md) for the measured contrast matrix; the numbers
+  there decide most of the rules below.
 - **Locked dark theme.** One palette, dark. `color-scheme: dark`. No light mode.
-  One scoped exception: the hero renders on a white canvas with near-black type
-  and a red controller accent (see `--color-paper` and the `--color-play-*`
-  tokens). That palette lives only inside `.hero-play` and on `#hero`; every
-  other surface stays dark.
-- **One accent per viewport.** Amber (`--color-accent`) is the only accent. Use it
-  for a single point of emphasis at a time (active state, one rule, one CTA), never
-  as a fill spread across a screen.
-  One scoped exception, deliberate: the Selected Work chapter takes the accent to a
-  full surface (`--color-amber-field`, `--color-amber-deep`, scoped to
-  `.work-chapter`). It is the one chapter allowed to do this, it is entered through
-  a zoom into the accent words that precede it, and it carries a second exception
-  with it: a gradient on a large surface, which the build spec otherwise forbids.
-  That gradient is material rather than ambient, brightest where the title sits and
-  falling off toward the bottom edge, and it never crosses type. On that field only
-  near-black ink is legible: vellum measures 2.33:1 and graphite 1.31:1, while void
-  is 6.79:1 at the top of the gradient and 5.29:1 at its darkest rendered point. The
-  cards stay dark objects on the field, so nothing inside them changes. Do not
-  darken `--color-amber-deep` without re-measuring; 4.62:1 is where void ink breaks.
-- **No pure white type.** On dark surfaces the lightest ink is vellum (`#ece7dd`),
-  an off-white; never `#fff`. Pure white appears only as a *surface*: the hero
-  canvas (`--color-paper`) and illustration/screenshot content inside project
-  covers.
-- **Drafting blue is contained.** `--color-drafting` belongs to the hero grid layer
-  only. It is never a UI accent.
+  One scoped exception: the hero renders on a white canvas with near-black type,
+  a violet controller shell and a lime active cap (see `--color-paper` and the
+  `--color-play-*` tokens). That palette lives only inside `.hero-play` and on
+  `#hero`; every other surface stays dark.
+- **One accent per viewport, and the accent is lime.** Use it for a single point
+  of emphasis at a time (active state, one rule, one CTA), never as a fill
+  spread across a screen. Lime is 17.75:1 on the page and **1.18:1 on white**,
+  so it never lands on paper; on a light surface the emphasis is violet or
+  black instead.
+- **Violet is surface, never highlight.** At 3.74:1 on black it is under the
+  body floor, and violet tints get worse as they darken toward the page (85% is
+  2.92:1, 40% is 1.43:1). So violet is never small type, a chip, or a hairline
+  on black. It works full bleed.
+  One scoped exception to the fill rule, deliberate: the Selected Work chapter
+  takes violet to a full surface (`--color-chapter-field`,
+  `--color-chapter-deep`, scoped to `.work-chapter`). It is the one chapter
+  allowed to do this, it is entered through a zoom into the accent words that
+  precede it, and it carries a second exception with it: a gradient on a large
+  surface, which the build spec otherwise forbids. That gradient is material
+  rather than ambient, brightest where the title sits and falling off toward the
+  bottom edge, and it never crosses type. The ink on that field runs the
+  opposite way from the old amber one: white is 5.62:1 and black only 3.74:1,
+  so everything on it is white. The field darkens toward `--color-chapter-deep`
+  (white 9.20:1), so the top of the gradient is the binding case. Nothing on the
+  field is dimmed, because opacity tiers exist to stop halation at 21:1 and
+  5.62:1 has none to stop.
+- **No pure white *body* type.** Pure white on pure black is 21:1, the highest
+  two colours can reach, and it halates over paragraphs. Body copy is
+  `--color-ink-body` (white/87, 15.61:1); pure white (`--color-vellum`) is for
+  display headings and for surfaces. White/50 (5.32:1) is the hard floor for any
+  text: white/45 is 4.43:1 and fails.
 - **Readability first, motion motivated.** Motion carries meaning (reveal, hierarchy,
   feedback). It is never decoration, and it always honors reduced-motion.
 - **Premium and bold, not childish.** Confident type, restrained color, deliberate
@@ -51,33 +62,51 @@ Declared once as CSS custom properties in `@theme`, so JS can read the exact sam
 hex via `getComputedStyle` and the WebGL hero, the SSR fallback, and the OG image
 generator never diverge.
 
-| Token | Hex | Tailwind | Role |
+| Token | Value | Tailwind | Role |
 |---|---|---|---|
-| `--color-void` | `#0b0d10` | `void` | Page background, dark surfaces, text on light |
-| `--color-vellum` | `#ece7dd` | `vellum` | Primary text/foreground, lightest surface |
-| `--color-graphite` | `#7e848f` | `graphite` | Muted text, labels, secondary lines |
-| `--color-hairline` | `#2a2e34` | `hairline` | Borders, dividers, rules |
-| `--color-accent` | `#ff6a1a` | `accent` | The single accent (amber): emphasis, focus, active |
-| `--color-drafting` | `#3a5a78` | `drafting` | Hero grid layer only, never a UI accent |
+| `--color-void` | `#000000` | `void` | Page background, dark objects on light |
+| `--color-paper` | `#ffffff` | `paper` | The hero canvas |
+| `--color-violet` | `#7e3bed` | `violet` | Surface and structure only |
+| `--color-lime` | `#c6ff34` | `lime` | The one signal colour |
+| `--color-vellum` | `#ffffff` | `vellum` | Display ink |
+| `--color-ink-body` | `white / 87%` | `ink-body` | Body copy (15.61:1) |
+| `--color-graphite` | `white / 60%` | `graphite` | Muted text, labels (7.84:1) |
+| `--color-hairline` | `white / 24%` | `hairline` | Decorative rules only (1.93:1) |
+| `--color-accent` | `= lime` | `accent` | Emphasis, focus, active |
+| `--color-on-accent` | `#000000` | `on-accent` | Ink on lime. Never white: 1.18:1 |
+| `--color-on-violet` | `#ffffff` | `on-violet` | Ink on violet |
+| `--color-violet-deep` | `#5829a6` | `violet-deep` | Chapter gradient base, controller shading |
+
+`--color-accent-readable` is an alias of `--color-accent`; both are lime. It
+survives only because a handful of call sites still name it.
+
+**One trap.** `app/globals.css` carries an unlayered
+`.bg-accent { color: var(--color-on-accent) }` that beats Tailwind's own
+utility. It has to: `bg-accent` paints lime, and without it the element keeps
+whatever foreground it inherited, which on this site is white, at 1.18:1.
 
 ### Surfaces and opacity
 
 Solid brand tokens cover most needs. Two recurring elevated surfaces are built from
 vellum-over-void so they stay on-palette:
 
-- **Faint panel** (default cards, media wells): `rgba(236, 231, 221, 0.02)`.
+- **Faint panel** (default cards, media wells): `rgba(255, 255, 255, 0.02)`.
 - **Opaque stacked card** (cinematic deck, where cards must occlude each other):
   `color-mix(in srgb, var(--color-vellum) 6%, var(--color-void))` plus a soft shadow.
 
-Text tiers use vellum at reduced alpha rather than new colors: body at `vellum/80`
-or `vellum/70`, supporting detail at `vellum/60`, on-brand hairlines and graphite
-for the quietest lines.
+Text tiers use white at reduced alpha rather than new colors, per the ink ladder
+in [`palette.md`](./palette.md). On the black page every tier down to white/50
+clears the body floor. On the violet chapter almost none of them do, which is
+why nothing there is dimmed.
 
 ### Editing tokens
 
 Change the value in `app/globals.css` first, then mirror it in `lib/tokens.ts`. Do
 not hardcode hex in components; use the Tailwind token utilities (`text-vellum`,
 `border-hairline`, `bg-void`, `text-accent`).
+
+`lib/tokens.ts` is not reactive. Its only consumer is the build-time OG image,
+so a token change reaches that image only after `npm run build`.
 
 ---
 
@@ -204,7 +233,7 @@ Custom easings, because the built-in ones are too weak. Defined in `@layer base`
   into place like a turning cube edge.
 - **Work card**: hover lift `translateY(-6px)`, border warms to graphite, and an
   accent rule wipes in (`scaleX(0)` to `1`).
-- **Hero rail**: the active state's tick extends and turns amber.
+- **Hero rail**: the active state's tick extends and turns lime.
 - **Shared element transitions**: project titles carry `view-transition-name:
   title-{slug}` so the card title morphs into the case study title across navigation.
 - **Scroll choreography**: GSAP + ScrollTrigger drive scrubbed timelines. Pinning is
@@ -266,9 +295,12 @@ non-broken experience.
 
 ## 6. Interaction and state
 
-- **Focus**: `:focus-visible` shows a `2px solid var(--color-accent)` outline,
-  `outline-offset: 3px`. Never remove it.
-- **Selection**: `::selection` is amber background on void text.
+- **Focus**: `:focus-visible` shows a `2px solid var(--color-accent)` outline
+  (lime, 17.75:1 on the page), `outline-offset: 3px`. Never remove it. It is
+  surface-scoped: black on the white hero (21:1), and lime again on the
+  controller, a dark object on that canvas, where black would be invisible and
+  violet only 2.90:1.
+- **Selection**: `::selection` is a lime background with black ink (`--color-on-accent`). White there would be 1.18:1.
 - **Hover gating**: all hover affordances are wrapped in
   `@media (hover: hover) and (pointer: fine)` so touch devices do not get stuck
   hover states.
@@ -304,9 +336,9 @@ the accessible baseline.
   than a CSS hide, because every implementation renders each project with the same
   view-transition-name and duplicates break the page transition.
   - `chapter` (current): the vendored Glyph Portal (`components/ui/glyph-portal.tsx`,
-    MIT, notice kept) with the word WORK in the display face, the amber field
+    MIT, notice kept) with the word WORK in the display face, the violet field
     showing through the letters, and a scroll-driven camera into the ink until the
-    amber fills the viewport. It reveals `components/work/WorkRail.tsx`: six big
+    violet fills the viewport. It reveals `components/work/WorkRail.tsx`: six big
     image-first cards on a horizontal rail that the page scroll drives sideways one
     card per viewport, snapping on a Motion spring, with a live `01 / 06` counter.
     `WorkPortal` waits for the display face before mounting the portal, because the
@@ -324,9 +356,12 @@ the accessible baseline.
 ## 8. Quick reference
 
 ```
-Colors    void #0b0d10 · vellum #ece7dd · graphite #7e848f
-          hairline #2a2e34 · accent #ff6a1a · drafting #3a5a78 (grid only)
-Hero only paper #ffffff (canvas) · play-red #c43a28 · play-face #f9f4e7
+Colors    black #000000 · white #ffffff · violet #7e3bed · lime #c6ff34
+          and nothing else. ink-body white/87 · graphite white/60
+          hairline white/24 · accent = lime · violet-deep #5829a6
+Hero only paper #ffffff (canvas) · play-red = violet · play-face #1f1f1f
+Never     lime on white (1.18:1) · violet as an accent on black (3.74:1)
+          white on lime (1.18:1) · text under white/50 on black (5.32:1 floor)
 Type      Archivo Expanded (display, uppercase) · Spectral (serif, body)
           JetBrains Mono (mono, labels)
 Frame     px-4 sm:px-8 lg:px-20 · mx-auto max-w-[1400px] · reading max-w-[760px]

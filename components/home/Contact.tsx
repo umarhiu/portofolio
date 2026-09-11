@@ -2,7 +2,7 @@ import { site } from "@/lib/content";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 
 /*
-  One contact intent only. The single amber primary action lives here; the
+  One contact intent only. The single lime primary action lives here; the
   hero State-05 CTA ("View the case files") is a portfolio intent, so the two
   do not collide.
 */
@@ -25,7 +25,7 @@ export function Contact() {
         <div className="mt-10 flex flex-col gap-6 sm:flex-row sm:items-center">
           <MagneticButton
             href={`mailto:${site.email}`}
-            className="cta inline-flex w-fit items-center gap-2 bg-accent px-7 py-3.5 font-mono text-xs uppercase tracking-widest text-primary-foreground"
+            className="cta inline-flex w-fit items-center gap-2 bg-accent px-7 py-3.5 font-mono text-xs uppercase tracking-widest text-on-accent"
           >
             Start a conversation
           </MagneticButton>

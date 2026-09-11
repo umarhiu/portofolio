@@ -1,27 +1,33 @@
-# Handoff: the amber Selected Work chapter
+# Handoff: the Selected Work portal chapter
 
 ## Updated direction, September 10
 
-Palette update: the primary is now forest #145A46, with white foregrounds and
-soft light borders on the work surface. Existing amber-named tokens are legacy
-aliases to primary/primary-deep, not separate orange values. Dark-background
-text accents use readable mint #8FD6B6; the portal blends that opening ink into
-the forest surface. The earlier amber references below are historical.
+Palette update: the field is violet `#7E3BED`, with white foregrounds and white
+borders on the work surface. The old `--color-amber-*` tokens are gone; the pair
+is now `--color-chapter-field` and `--color-chapter-deep`, renamed because the
+name had been wrong three generations running (orange, then green, now violet).
+The site accent is lime `#C6FF34`.
+
+**This chapter has been through three palettes.** Everything below the next
+section that says "amber" is describing the mechanic, not the colour; substitute
+violet. The authority on colour is [`palette.md`](./palette.md), and the only
+numbers in this document that describe the shipped build are the ones in
+"Contrast, measured" below, which were re-measured for violet.
 
 Positioning now owns the portal opening, with no separate WORK title screen.
 The enlarged headline reveals fully and holds through 64 percent of its progress.
 Then StatementPortal enters the measured solid ink of the actual "Mine run."
 letterforms, using Glyph Portal's opaque-ink scan and logarithmic camera zoom.
 The camera now has 3.5 viewport heights of scroll travel, independent of
-the original headline reading pace, followed by a short full-amber hold.
-The amber fills the entire sticky viewport and stays amber as Selected Work
-scrolls into view. WorkRail retains its scroll-driven card behavior and void
-text on the amber surface. The long Reusely paragraph is no longer rendered.
+the original headline reading pace, followed by a short full-field hold.
+The violet fills the entire sticky viewport and stays as Selected Work
+scrolls into view. WorkRail retains its scroll-driven card behavior, with white
+text on the violet surface. The long Reusely paragraph is no longer rendered.
 
 The work handoff uses normal document scrolling. Once the letters fill the
-viewport with amber, the fully visible heading and cards enter from below as
-the visitor continues scrolling. Both surfaces use the same amber. A static
-35dvh overlap and a reduced 4dvh settling hold shorten the empty amber travel
+viewport with violet, the fully visible heading and cards enter from below as
+the visitor continues scrolling. Both surfaces use the same violet. A static
+35dvh overlap and a reduced 4dvh settling hold shorten the empty field travel
 by 55dvh, without a visibility switch, fade or artificial entrance transform.
 The experimental WorkReveal wrapper has been removed. Desktop card travel
 starts only once the rail reaches its sticky position; touch keeps native
@@ -73,7 +79,7 @@ no-dash convention as the rest of the docs.
 | Font gate and portal configuration | `components/work/WorkPortal.tsx` |
 | The vendored portal itself | `components/ui/glyph-portal.tsx` (MIT, notice kept) |
 | The rail of cards | `components/work/WorkRail.tsx` |
-| Tokens, surface, rail styles | `app/globals.css`, the `@theme` amber pair and the block headed "The amber chapter" |
+| Tokens, surface, rail styles | `app/globals.css`, the `@theme` chapter pair and the block headed "The violet chapter" |
 | Design rules and the recorded exceptions | `docs/design.md`, Principles and Progressive enhancement |
 
 To see the previous implementation, set `WORK_CHAPTER` to `"cinematic"`. Nothing
@@ -219,22 +225,35 @@ and both recorded in `docs/design.md`:
   chapter is the one place the accent becomes a surface.
 - **No gradients on large surfaces** (build spec). The field gradient is
   material rather than ambient: brightest where the heading sits, falling to
-  `--color-amber-deep` at the bottom edge, never crossing type.
+  `--color-chapter-deep` at the bottom edge, never crossing type.
 
 ### Contrast, measured
 
-On the amber field `#ff6a1a`:
+On the violet field `#7E3BED`. Note that the ink runs the **opposite** way from
+the amber field this chapter used to have: there, only near-black was legible;
+here, only white is.
 
 | Ink | Ratio | Verdict |
 | --- | --- | --- |
-| void `#0b0d10` | 6.79:1 | passes, used for all type on the field |
-| void on `--color-amber-deep` `#d95410` | 4.84:1 | passes; 4.62:1 is where it would break, so do not darken the deep end |
-| vellum `#ece7dd` | 2.33:1 | fails |
-| graphite `#7e848f` | 1.31:1 | fails |
+| white `#FFFFFF` | 5.62:1 | passes, used for all type on the field |
+| white on `--color-chapter-deep` `#5829A6` | 9.20:1 | passes; the gradient darkens downward, so the top is always the binding case |
+| white / 85% | 4.51:1 | passes, but only just |
+| lime `#C6FF34` | 4.75:1 | passes, but two saturated hues vibrate: counter and rules only, never a paragraph |
+| black `#000000` | 3.74:1 | fails for body; clears 3:1 for large text and for a surface boundary |
 
-Sampled on rendered pixels, the darkest field colour in view measured 5.29:1
-against void. This is why every eyebrow, heading, title, description and badge in
-the chapter is void rather than the site's usual vellum and graphite.
+Two consequences worth keeping:
+
+- **Nothing on this field is dimmed.** The ink ladder (white/87 for body, /60 for
+  meta) exists to stop halation at 21:1 on the black page. At 5.62:1 there is no
+  halation to stop, and the tiers eat most of the budget: white/70 is already
+  3.53:1. Hierarchy on the field is carried by size and weight instead.
+- **Badge outlines are white/70 (3.53:1), not white/35.** The old value measured
+  1.90:1 here. An outline is a boundary, and a boundary owes 3:1.
+
+The covers sit on a black mat. All six were authored for a dark surround and
+several are saturated blue, which sits a short way round the wheel from violet
+and vibrates against it; the mat gives each one back the surround it was drawn
+for and separates it from the field at 3.74:1.
 
 ---
 

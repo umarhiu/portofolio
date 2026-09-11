@@ -265,7 +265,7 @@ export default async function CaseStudyPage({
                     href={project.study.prototypeUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-5 inline-flex items-center gap-2 border border-vellum/30 px-5 py-3 font-mono text-xs uppercase tracking-widest text-vellum transition-colors duration-200 hover:border-accent hover:bg-accent hover:text-primary-foreground"
+                    className="mt-5 inline-flex items-center gap-2 border border-vellum/30 px-5 py-3 font-mono text-xs uppercase tracking-widest text-vellum transition-colors duration-200 hover:border-accent hover:bg-accent hover:text-on-accent"
                   >
                     {project.study.prototypeCta ?? "Open the live prototype"}
                     <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden="true" />

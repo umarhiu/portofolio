@@ -2,40 +2,61 @@
 
 /*
   Substrate design tokens. Declared once here so JS can read the exact same
-  hex via getComputedStyle (see lib/cssvar.ts), which keeps the future WebGL
-  hero and the SSR fallback on one palette with zero drift.
-  Deep Sea Green is primary, Blaze Orange secondary, Mirage the neutral.
-  White remains the light canvas. Wild Sand is reserved, not applied.
+  hex via getComputedStyle, which keeps every surface on one palette with
+  zero drift. Four colours, and nothing else is a hue: every other value in
+  the system is one of these four at some alpha.
+
+  Contrast, measured (WCAG relative luminance: black 0, violet 0.1368,
+  lime 0.8377, white 1.0):
+
+    white on black      21.00     lime on violet       4.75
+    lime on black       17.75     black on violet      3.74  large/non-text
+    black on lime       17.75     lime on white        1.18  INVISIBLE
+    violet-deep white    9.20     white on violet      5.62
+
+  Two rules follow from that table and they are not style preferences:
+  lime never lands on paper, and violet is never a small object on black.
 */
 @theme {
-  --color-mirage: #16232a;
-  --color-primary: #075056;
-  --color-secondary: #ff5b04;
-  --color-tertiary: #e4eef0;
+  --color-void: #000000;
   --color-paper: #ffffff;
-  --color-void: #0b0d10;
+  --color-violet: #7e3bed;
+  --color-lime: #c6ff34;
+
+  /* The ink ladder on the black page. Pure white on pure black is 21:1, the
+     maximum two colours can reach, and it halates over paragraphs, so body
+     copy sits at 87% (15.61:1) and pure white is kept for display type.
+     Nothing below 50% (5.32:1) may carry text: 45% is 4.43:1 and fails.
+     A border that means something needs 3:1, so hairline is decorative only
+     and any meaningful boundary is lime or white at 40% and above. */
   --color-vellum: var(--color-paper);
-  --color-graphite: color-mix(in srgb, var(--color-mirage) 45%, white);
-  --color-hairline: color-mix(in srgb, var(--color-mirage) 82%, white);
-  --color-primary-deep: color-mix(in srgb, var(--color-primary) 70%, var(--color-mirage));
-  --color-primary-foreground: #ffffff;
-  --color-secondary-foreground: var(--color-mirage);
-  --color-accent: var(--color-primary);
-  --color-accent-readable: var(--color-secondary);
-  --gradient-primary: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
-  --gradient-primary-highlight: linear-gradient(120deg, color-mix(in srgb, var(--color-primary) 40%, white) 0%, color-mix(in srgb, var(--color-primary) 65%, white) 45%, var(--color-primary) 100%);
-  --color-drafting: var(--color-primary);
+  --color-ink-body: rgb(255 255 255 / 0.87);
+  --color-graphite: rgb(255 255 255 / 0.6);
+  --color-hairline: rgb(255 255 255 / 0.24);
 
-  /* Legacy controller aliases: green shell, white faceplate, Mirage controls.
-     The selected button uses secondary orange; geometry stays unchanged. */
-  --color-play-red: var(--color-primary);
-  --color-play-red-deep: var(--color-primary-deep);
-  --color-play-face: var(--color-paper);
-  --color-play-dark: var(--color-mirage);
+  /* Lime is the one signal colour. Violet is structure and surface only:
+     at 3.74:1 on black it is under the body floor, and violet tints get
+     worse as they darken toward the page (85% 2.92, 40% 1.43), so it works
+     full bleed and nowhere else. */
+  --color-accent: var(--color-lime);
+  --color-accent-readable: var(--color-lime);
+  --color-violet-deep: #5829a6;
+  --color-on-accent: #000000;
+  --color-on-violet: #ffffff;
 
-  /* Legacy work-chapter aliases resolve to primary green with white text. */
-  --color-amber-field: var(--color-primary);
-  --color-amber-deep: var(--color-primary-deep);
+  /* Controller: black body, violet shell, lime active cap. The faceplate is
+     near-black rather than white because lime on white is 1.18:1 and
+     invisible, while lime on this face is 13.94:1. */
+  --color-play-red: var(--color-violet);
+  --color-play-red-deep: var(--color-violet-deep);
+  --color-play-face: #1f1f1f;
+  --color-play-dark: var(--color-void);
+
+  /* The work chapter is a full-bleed violet field carrying white ink at
+     5.62:1, with the cards staying black objects on it at 3.74:1, which
+     clears the 3:1 non-text threshold for a surface boundary. */
+  --color-chapter-field: var(--color-violet);
+  --color-chapter-deep: var(--color-violet-deep);
 
   --font-display: var(--font-archivo-expanded), "Arial Black", system-ui, sans-serif;
   --font-serif: var(--font-spectral), Georgia, "Times New Roman", serif;
@@ -49,14 +70,14 @@
 
   html {
     background-color: var(--color-void);
-    color: var(--color-vellum);
+    color: var(--color-ink-body);
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
   }
 
   body {
     background-color: var(--color-void);
-    color: var(--color-vellum);
+    color: var(--color-ink-body);
     font-family: var(--font-serif);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -70,13 +91,20 @@
 
   ::selection {
     background-color: var(--color-accent);
-    color: var(--color-primary-foreground);
+    color: var(--color-on-accent);
   }
 
   :focus-visible {
     outline: 2px solid var(--color-accent-readable);
     outline-offset: 3px;
     border-radius: 1px;
+  }
+
+  /* Lime is 17.75:1 on the black page but 1.18:1 on paper, so any light
+     surface flips focus to black ink (21:1 on white). The hero declares its
+     own below; this is the hook for any future light surface. */
+  [data-surface="paper"] :focus-visible {
+    outline-color: var(--color-void);
   }
 
   /* Tabular figures for all metrics and mono numerals. */
@@ -241,7 +269,7 @@ html[data-work="cinematic"] .work-static {
 }
 html[data-nav-theme="light"] .site-nav__toggle,
 html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] .site-nav__toggle {
-  color: var(--color-mirage);
+  color: var(--color-void);
   border-color: inherit;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -254,7 +282,7 @@ html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] .site-nav__togg
   border-radius: 18px;
   overflow: hidden;
   background: var(--color-paper);
-  box-shadow: 0 32px 48px -14px rgb(22 35 42 / 24%), 0 5px 12px rgb(22 35 42 / 7%);
+  box-shadow: 0 32px 48px -14px rgb(0 0 0 / 21%), 0 5px 12px rgb(0 0 0 / 6%);
 }
 .hero-studio__card img { display: block; width: 100%; height: auto; }
 @media (hover: hover) and (pointer: fine) and (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
@@ -272,7 +300,7 @@ html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] .site-nav__togg
 .hero-studio__slot--detail { right: 3%; bottom: -85px; width: clamp(140px, 14vw, 220px); }
 .hero-studio__slot--detail .hero-studio__card { aspect-ratio: 0.78; }
 .hero-studio__slot--detail img { height: 100%; object-fit: cover; object-position: center; }
-.hero-studio__slot--architecture .hero-studio__card { box-shadow: 0 16px 26px -12px rgb(22 35 42 / 20%); }
+.hero-studio__slot--architecture .hero-studio__card { box-shadow: 0 16px 26px -12px rgb(0 0 0 / 17%); }
 @media (max-width: 1023px) {
   .hero-studio__slot--architecture, .hero-studio__slot--paper, .hero-studio__slot--detail { display: none; }
   .hero-studio__slot--metal { width: 56px; left: 18px; top: 88px; }
@@ -347,7 +375,7 @@ html[data-hero-intro] .site-nav {
 html[data-nav-theme="light"] .site-nav,
 html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] {
   background-color: var(--color-paper);
-  border-color: rgba(22, 35, 42, 0.1);
+  border-color: rgba(0, 0, 0, 0.085);
 }
 html[data-nav-theme="light"] .site-nav__mark,
 html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] .site-nav__mark {
@@ -355,13 +383,13 @@ html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] .site-nav__mark
 }
 html[data-nav-theme="light"] .site-nav ul,
 html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] ul {
-  color: rgba(22, 35, 42, 0.65);
+  color: rgba(0, 0, 0, 0.58);
 }
 html[data-nav-theme="light"] .site-nav ul a:hover,
 html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] ul a:hover {
   color: var(--color-void);
 }
-/* The amber focus ring is ~2.4:1 on the white bar; ink is ~19:1. */
+/* The lime focus ring is 1.18:1 on the white bar; black ink is 21:1. */
 html[data-nav-theme="light"] .site-nav :focus-visible,
 html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] :focus-visible {
   outline-color: var(--color-void);
@@ -462,8 +490,8 @@ html:has(#hero) {
   white-space: nowrap;
 }
 /* --- The controller, v2 --------------------------------------------------- */
-/* A small physical product: matte red molded shell with REAL extruded depth
-   (stacked slices, not a drop shadow), ivory inset faceplate, charcoal rubber
+/* A small physical product: matte violet molded shell with REAL extruded depth
+   (stacked slices, not a drop shadow), near-black inset faceplate, rubber
    D-pad, four raised round action buttons in a diamond, one seam, a top-edge
    highlight, and a ground shadow OUTSIDE the 3D model (filters on a
    preserve-3d ancestor would flatten it). Orientation comes from the HeroPlay
@@ -492,8 +520,8 @@ html:has(#hero) {
   border-radius: 50%;
   background: radial-gradient(
     ellipse at center,
-    rgba(7, 80, 86, 0.38) 0%,
-    rgba(7, 80, 86, 0.2) 45%,
+    rgba(126, 59, 237, 0.38) 0%,
+    rgba(126, 59, 237, 0.2) 45%,
     transparent 72%
   );
   filter: blur(4px);
@@ -512,9 +540,9 @@ html:has(#hero) {
 .hero-play .hp-ctrl__slice:nth-child(1) { transform: translateZ(-2.5px); }
 .hero-play .hp-ctrl__slice:nth-child(2) { transform: translateZ(-5px); }
 .hero-play .hp-ctrl__slice:nth-child(3) { transform: translateZ(-7.5px); }
-.hero-play .hp-ctrl__slice:nth-child(4) { transform: translateZ(-10px); background: color-mix(in srgb, var(--color-primary) 60%, var(--color-mirage)); }
-.hero-play .hp-ctrl__slice:nth-child(5) { transform: translateZ(-12.5px); background: color-mix(in srgb, var(--color-primary) 45%, var(--color-mirage)); }
-.hero-play .hp-ctrl__slice:nth-child(6) { transform: translateZ(-15px); background: color-mix(in srgb, var(--color-primary) 30%, var(--color-mirage)); }
+.hero-play .hp-ctrl__slice:nth-child(4) { transform: translateZ(-10px); background: color-mix(in srgb, var(--color-violet) 60%, var(--color-void)); }
+.hero-play .hp-ctrl__slice:nth-child(5) { transform: translateZ(-12.5px); background: color-mix(in srgb, var(--color-violet) 45%, var(--color-void)); }
+.hero-play .hp-ctrl__slice:nth-child(6) { transform: translateZ(-15px); background: color-mix(in srgb, var(--color-violet) 30%, var(--color-void)); }
 /* Top face of the shell. */
 .hero-play .hp-ctrl__body {
   position: absolute;
@@ -522,10 +550,10 @@ html:has(#hero) {
   border-radius: 18px;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-primary) 80%, white) 0%,
+    color-mix(in srgb, var(--color-violet) 80%, white) 0%,
     var(--color-play-red) 16%,
     var(--color-play-red) 70%,
-    var(--color-primary-deep) 100%
+    var(--color-violet-deep) 100%
   );
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32); /* top-edge highlight */
 }
@@ -540,15 +568,17 @@ html:has(#hero) {
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.14));
   border-radius: 1px;
 }
-/* Inset ivory faceplate, floated slightly for parallax under tilt. */
+/* Inset near-black faceplate, floated slightly for parallax under tilt.
+   It is dark rather than ivory because the active cap is lime, and lime on
+   white is 1.18:1. On this face it is 13.94:1. */
 .hero-play .hp-ctrl__face {
   position: absolute;
   inset: 11% 7% 15% 7%;
   border-radius: 12px;
-  background: linear-gradient(180deg, var(--color-play-face), color-mix(in srgb, var(--color-paper) 90%, var(--color-mirage)));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-play-face) 82%, white), var(--color-play-face));
   box-shadow:
-    inset 0 2px 4px rgba(22, 35, 42, 0.16),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.7);
+    inset 0 2px 4px rgba(0, 0, 0, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.14);
   transform: translateZ(4px);
 }
 
@@ -569,7 +599,7 @@ html:has(#hero) {
   -webkit-tap-highlight-color: transparent;
 }
 .hero-play .hp-dpad:focus-visible {
-  outline: 2px solid var(--color-void);
+  outline: 2px solid var(--color-accent);
   outline-offset: 4px;
 }
 .hero-play .hp-cross {
@@ -582,10 +612,10 @@ html:has(#hero) {
 .hero-play .hp-cross i {
   position: absolute;
   display: block;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-mirage) 80%, white), var(--color-play-dark) 55%, var(--color-mirage));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-void) 80%, white), var(--color-play-dark) 55%, var(--color-void));
   border-radius: 5px;
   box-shadow:
-    0 2.5px 3px rgba(22, 35, 42, 0.38),
+    0 2.5px 3px rgba(0, 0, 0, 0.332),
     inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 .hero-play .hp-cross .hp-cross-v {
@@ -609,7 +639,7 @@ html:has(#hero) {
   height: 9px;
   border-radius: 9999px;
   transform: translate(-50%, -50%);
-  background: radial-gradient(circle at 40% 35%, var(--color-mirage), color-mix(in srgb, var(--color-mirage) 85%, white));
+  background: radial-gradient(circle at 40% 35%, var(--color-void), color-mix(in srgb, var(--color-void) 85%, white));
   box-shadow: none;
 }
 /* Button travel: ~3px into the housing (along Z now), shadow tightens. */
@@ -620,7 +650,7 @@ html:has(#hero) {
 }
 .hero-play .hp-dpad:active .hp-cross i {
   box-shadow:
-    0 1px 1px rgba(22, 35, 42, 0.42),
+    0 1px 1px rgba(0, 0, 0, 0.363),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
@@ -664,16 +694,16 @@ html:has(#hero) {
 .hero-play .hp-act[data-pos="bottom"] { left: var(--ho); top: calc(2 * var(--vo)); }
 .hero-play .hp-act[data-pos="left"]   { left: 0; top: var(--vo); }
 .hero-play .hp-act:focus-visible {
-  outline: 2px solid var(--color-void);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 .hero-play .hp-act__cap {
   width: 26px;
   height: 26px;
   border-radius: 9999px;
-  background: radial-gradient(circle at 38% 30%, color-mix(in srgb, var(--color-mirage) 75%, white), var(--color-play-dark) 55%, var(--color-mirage));
+  background: radial-gradient(circle at 38% 30%, color-mix(in srgb, var(--color-void) 75%, white), var(--color-play-dark) 55%, var(--color-void));
   box-shadow:
-    0 3px 4px rgba(22, 35, 42, 0.4),
+    0 3px 4px rgba(0, 0, 0, 0.348),
     inset 0 1px 0 rgba(255, 255, 255, 0.16);
   transform: translateZ(3px);
   /* Same press physics as the D-pad: fast in, controlled spring out. */
@@ -685,28 +715,34 @@ html:has(#hero) {
 .hero-play .hp-act:active .hp-act__cap {
   transform: translateZ(0px);
   box-shadow:
-    0 1px 1.5px rgba(22, 35, 42, 0.45),
+    0 1px 1.5px rgba(0, 0, 0, 0.391),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transition-duration: 80ms;
   transition-timing-function: ease-out;
 }
-/* Active mode: the selected cap lights up in the controller's own red, ringed
-   by a thin ivory separator. With the caption gone this is the only sighted
-   cue for which word is selected, so it has to carry real weight: red on the
-   ivory faceplate is 5.3:1, where the previous ivory rim was ~1.1:1. */
+/* Active mode: the selected cap lights up lime, ringed by the faceplate and
+   then by the violet shell. With the caption gone this is the only sighted
+   cue for which word is selected, so it has to carry real weight: lime on
+   this faceplate is 13.94:1, and against an inactive cap it is 13.94:1. */
 .hero-play .hp-act[data-active="true"] .hp-act__cap {
-  background: radial-gradient(circle at 38% 30%, color-mix(in srgb, var(--color-secondary) 80%, white), var(--color-secondary) 58%, color-mix(in srgb, var(--color-secondary) 75%, var(--color-mirage)));
+  background: radial-gradient(circle at 38% 30%, color-mix(in srgb, var(--color-lime) 80%, white), var(--color-lime) 58%, color-mix(in srgb, var(--color-lime) 75%, var(--color-void)));
   box-shadow:
     0 0 0 2px var(--color-play-face),
     0 0 0 3px var(--color-play-red-deep),
-    0 3px 4px rgba(22, 35, 42, 0.4),
+    0 3px 4px rgba(0, 0, 0, 0.348),
     inset 0 1px 0 rgba(255, 255, 255, 0.24);
 }
 
-/* The site-wide amber focus ring measures ~2.4:1 on white; ink is ~19:1.
-   Scoped so the dark remainder of the site keeps its amber ring. */
+/* The site-wide lime ring is 17.75:1 on the black page but 1.18:1 on this
+   white canvas, so the hero flips focus to black ink at 21:1. */
 .hero-play :focus-visible {
   outline-color: var(--color-void);
+}
+/* Except on the controller itself, which is a dark object on that canvas:
+   black is invisible on the #1f1f1f faceplate and violet is only 2.90:1.
+   Lime is 13.94:1. */
+.hero-play .hp-ctrl :focus-visible {
+  outline-color: var(--color-accent);
 }
 
 /* Reduced motion: no pointer tilt (the island also gates its listeners) and no
@@ -958,8 +994,11 @@ html:has(#hero) {
    with no state to keep in sync. A backdrop at almost exactly 50% grey is the
    degenerate case for any inverting blend, so the ring also filters its own
    backdrop with contrast(), which widens the separation for near-mid
-   backdrops (it cannot rescue an exactly-mid one, and nothing on this site
-   presents a large surface at that value).
+   backdrops. It cannot rescue every one of them: the violet chapter is a
+   large mid-luminance surface, and over it exclusion renders the ring
+   #81c412, only 2.63:1 against the field. The engine flags those surfaces as
+   html[data-cursor-surface="violet"] and the blend stands down there, which
+   leaves a plain white cursor at 5.62:1 on violet.
 
    Why these three layers are body children and not one wrapper: an element
    with mix-blend-mode blends only within its nearest ancestor stacking
@@ -1032,6 +1071,21 @@ html[data-fluid-cursor="on"]
   border-radius: 999px;
 }
 
+/* On the flat violet field, inverting the backdrop is worse than not blending:
+   exclusion gives 2.63:1 there, plain white gives 5.62:1. The contrast lens
+   goes too, since it exists only to help the blend. The engine deliberately
+   does NOT raise this flag over the cover images, which run near-white to
+   near-black and are exactly what the blend is for; standing it down over
+   them measured 1.23:1 on a light cover. */
+html[data-cursor-surface="violet"] .fcur-ring,
+html[data-cursor-surface="violet"] .fcur-dot,
+html[data-cursor-surface="violet"] .fcur-ripple {
+  mix-blend-mode: normal;
+}
+html[data-cursor-surface="violet"] .fcur-ring {
+  backdrop-filter: none;
+}
+
 /* Forced colors: the system owns every color, and a blended white overlay can
    resolve to nothing. Stand down entirely and give the native cursor back. */
 @media (forced-colors: active) {
@@ -1055,10 +1109,10 @@ html[data-fluid-cursor="on"]
 }
 
 /* ---------------------------------------------------------------------------
-   The amber chapter (components/work/WorkChapter.tsx). Selected Work entered
+   The violet chapter (components/work/WorkChapter.tsx). Selected Work entered
    through the vendored Glyph Portal (components/ui/glyph-portal.tsx): the
-   word on the dark page, the amber field through the letters, a scroll-driven
-   camera into the ink, then the horizontal rail of case files on the amber.
+   word on the dark page, the violet field through the letters, a scroll-driven
+   camera into the ink, then the horizontal rail of case files on the violet.
 
    Two written rules are knowingly suspended here, both scoped to this one
    chapter and both recorded in docs/design.md:
@@ -1068,9 +1122,11 @@ html[data-fluid-cursor="on"]
      here is material rather than ambient: brightest where the heading sits,
      falling off toward the bottom edge, never crossing type.
 
-   The ink flip is not a preference. On this field vellum is 2.33:1 and
-   graphite 1.31:1; void is 6.79:1 at the top of the gradient and 4.84:1 at
-   its darkest. Anything landing directly on the amber must be void.
+   The ink flip is not a preference, and it runs the other way from the old
+   amber field. On violet, white is 5.62:1 and void only 3.74:1, under the
+   body floor, so everything that lands on this field is white. The field
+   darkens toward violet-deep at its base, where white reaches 9.20:1, so the
+   top of the gradient is the binding case.
 --------------------------------------------------------------------------- */
 
 /* The portal ships its own :where() rules at zero specificity, so plain class
@@ -1085,7 +1141,7 @@ html[data-fluid-cursor="on"]
   display: block;
   min-height: 0;
 }
-/* The amber field behind the letters and, after the flood, behind the rail.
+/* The violet field behind the letters and, after the flood, behind the rail.
    --gp-field-scale is the portal slow push-in during the zoom. */
 .work-portal__field {
   position: absolute;
@@ -1093,9 +1149,9 @@ html[data-fluid-cursor="on"]
   transform: scale(var(--gp-field-scale, 1));
   background: radial-gradient(
     120% 90% at 50% 0%,
-    var(--color-amber-field) 0%,
-    var(--color-amber-field) 42%,
-    var(--color-amber-deep) 100%
+    var(--color-chapter-field) 0%,
+    var(--color-chapter-field) 42%,
+    var(--color-chapter-deep) 100%
   );
 }
 /* The one link on the opening frame, set like every other eyebrow. */
@@ -1107,10 +1163,10 @@ html[data-fluid-cursor="on"]
   color: var(--color-vellum);
 }
 /* Before the display face resolves, and without JavaScript, the rail renders
-   plainly on the amber with no portal frame. */
+   plainly on the violet with no portal frame. */
 .work-portal--pending {
-  background: var(--color-amber-field);
-  color: var(--color-void);
+  background: var(--color-chapter-field);
+  color: var(--color-on-violet);
 }
 /* The section hairline is the seam with the statement above. The portal frame
    is its own boundary, so the rule would only cut across it. */
@@ -1133,24 +1189,38 @@ html[data-fluid-cursor="on"]
 .work-rail {
   --rail-card: min(44vw, 600px, max(320px, calc((100dvh - 28rem) * 1.2)));
   --rail-gap: 2.5rem;
-  color: var(--color-void);
-  background: var(--color-amber-field);
+  color: var(--color-on-violet);
+  background: var(--color-chapter-field);
 }
-.work-chapter { background: var(--color-primary); color: var(--color-primary-foreground); }
+.work-chapter { background: var(--color-chapter-field); color: var(--color-on-violet); }
+/* The highlight sits on the black page, where violet is 3.74:1 and under the
+   body floor. This is the reason lime is the accent and violet is not. */
 .statement-highlight {
-  color: var(--color-primary);
+  color: var(--color-accent);
 }
 .statement-portal, .work-chapter, .work-chapter .work-rail {
-  background-color: var(--color-primary);
+  background-color: var(--color-chapter-field);
   background-image: none;
 }
-.work-chapter .work-rail { color: var(--color-primary-foreground); }
-.work-chapter .work-rail__card p { color: rgb(255 255 255 / .85); }
-.work-chapter .work-rail__badge { color: white; border-color: rgb(255 255 255 / .35); }
-.text-accent { color: var(--color-accent-readable); }
-.bg-accent, .hover\:bg-accent:hover { color: var(--color-primary-foreground); }
+/* The violet field is a far tighter ink budget than the black page: white is
+   only 5.62:1 here against 21:1 there, and white/85 is 4.51:1, scraping the
+   body floor. Dimming body copy exists to stop halation at 21:1, a problem
+   that does not exist at 5.62:1, so nothing on this field is dimmed. The
+   hierarchy is carried by size and weight instead. */
+.work-chapter .work-rail { color: var(--color-on-violet); }
+.work-chapter .work-rail__card p { color: var(--color-on-violet); }
+/* A badge outline is a meaningful boundary, so it owes 3:1. The old white/35
+   was 1.90:1 on this field; white/70 is 3.53:1. */
+.work-chapter .work-rail__badge {
+  color: var(--color-on-violet);
+  border-color: rgb(255 255 255 / .7);
+}
+/* Both accent tokens resolve to lime now, so the old .text-accent override is
+   a no-op and is gone. This one is not: bg-accent paints lime, and white on
+   lime is 1.18:1, so its ink has to be the accent's ink. */
+.bg-accent, .hover\:bg-accent:hover { color: var(--color-on-accent); }
 @media (prefers-reduced-motion: no-preference) {
-  /* Enter sooner over the already-filled amber, without a fade or lift. */
+  /* Enter sooner over the already-filled violet, without a fade or lift. */
   .statement.is-sticky + #selected-work[data-work-mode="chapter"] {
     margin-top: -35dvh;
   }
@@ -1184,11 +1254,18 @@ html[data-fluid-cursor="on"]
   flex: 0 0 var(--rail-card);
   width: var(--rail-card);
 }
+/* All six covers were authored for a dark surround, and several are
+   saturated blue, which sits a short way round the wheel from violet and
+   vibrates against it. A black mat gives each cover back the surround it was
+   drawn for and separates it from the field at 3.74:1, which clears the 3:1
+   a boundary owes. Spread rather than padding, so the measured media height
+   in WorkRail is untouched. */
 .work-rail__media {
   aspect-ratio: 4 / 3;
-  border-radius: 24px;
+  border-radius: 20px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--color-void) 14%, var(--color-amber-field));
+  background: var(--color-void);
+  box-shadow: 0 0 0 12px var(--color-void);
 }
 .work-rail__media img {
   display: block;
@@ -1197,7 +1274,7 @@ html[data-fluid-cursor="on"]
   object-fit: cover;
 }
 .work-rail__badge {
-  border: 1px solid color-mix(in srgb, var(--color-void) 45%, transparent);
+  border: 1px solid rgb(255 255 255 / .7);
   border-radius: 999px;
   padding: 0.4rem 0.85rem;
   font-family: var(--font-mono);
@@ -1205,7 +1282,7 @@ html[data-fluid-cursor="on"]
   line-height: 1;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: var(--color-void);
+  color: var(--color-on-violet);
 }
 /* The static rail: server render, touch, narrow, reduced motion. A native
    horizontal scroller without snapping or a visible scrollbar. */

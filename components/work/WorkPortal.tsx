@@ -6,9 +6,9 @@ import GlyphPortal from "@/components/ui/glyph-portal";
 /*
   The doorway into the Selected Work chapter: the vendored Glyph Portal
   (components/ui/glyph-portal.tsx) configured for this site. A single word set
-  in the display face sits on the dark page; the amber field shows through the
+  in the display face sits on the dark page; the violet field shows through the
   letterforms; scrolling flies the camera into the solid ink of one letter until
-  the amber fills the viewport, and the rail of case files is revealed on it.
+  the violet fills the viewport, and the rail of case files is revealed on it.
 
   Why a wrapper, and why it waits for the font. Glyph Portal freezes whichever
   faces are AVAILABLE at mount (document.fonts.check), and a face that is still
@@ -80,8 +80,8 @@ export function WorkPortal({ children }: { children: ReactNode }) {
       style={{
         "--gp-paper": "var(--color-void)",
         "--gp-ink": "var(--color-vellum)",
-        "--gp-field": "var(--color-amber-field)",
-        "--gp-foreground": "var(--color-primary-foreground)",
+        "--gp-field": "var(--color-chapter-field)",
+        "--gp-foreground": "var(--color-on-violet)",
       }}
       background={<div aria-hidden="true" className="work-portal__field" />}
     >
