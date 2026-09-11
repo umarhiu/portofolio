@@ -49,6 +49,7 @@ export function StatementPortal({ source, progress, readingProgress, firstWord, 
         span.setAttribute("opacity", String(.18 + .82 * clamp((readingProgress.get() - start) / (wordStep * 1.5))));
       }
       const t = p;
+      element.style.setProperty("--statement-gradient-opacity", String(1 - smooth(0, .65, t)));
       const eased = t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2;
       const scale = Math.exp(Math.log(endScale) * eased);
       const blend = (1 / scale - 1) / (1 / endScale - 1);
@@ -60,6 +61,15 @@ export function StatementPortal({ source, progress, readingProgress, firstWord, 
       // Scale the clip, not an HTML text bitmap: glyph edges stay sharp even
       // at the final camera scale. The measured solid ink covers every corner.
       const radians = roll * Math.PI / 180;
+      // Test the viewport corners against the measured solid ink square.
+      // The handoff cue starts when the camera actually covers the screen,
+      // rather than waiting for an arbitrary scroll-progress threshold.
+      const covered = [[0, 0], [width, 0], [0, height], [width, height]].every(([x, y]) => {
+        const rx = (Math.cos(radians) * (x - sx) + Math.sin(radians) * (y - sy)) / scale + cx;
+        const ry = (-Math.sin(radians) * (x - sx) + Math.cos(radians) * (y - sy)) / scale + cy;
+        return Math.abs(rx - target.x) <= target.radius && Math.abs(ry - target.y) <= target.radius;
+      });
+      element.dataset.portalFilled = String(covered || p === 1);
       const dx = sx / scale, dy = sy / scale;
       clip.current!.setAttribute("transform", `scale(${scale}) rotate(${roll})`);
       zoomClip.current!.setAttribute("transform", `scale(${scale}) rotate(${roll})`);
@@ -75,6 +85,7 @@ export function StatementPortal({ source, progress, readingProgress, firstWord, 
       // Keep HTML for layout and accessibility only. The same SVG renders
       // both the word-opacity reveal and the camera, with no render swap.
       text.style.color = "transparent";
+      text.dataset.portalActive = "true";
     };
     const measure = () => {
       if (disposed) return;
@@ -129,6 +140,7 @@ export function StatementPortal({ source, progress, readingProgress, firstWord, 
     return () => {
       disposed = true; observer.disconnect(); unsubscribe(); unsubscribeReading();
       text.style.color = "";
+      delete text.dataset.portalActive;
     };
   }, [id, progress, readingProgress, firstWord, wordStep, source]);
 
@@ -144,6 +156,8 @@ export function StatementPortal({ source, progress, readingProgress, firstWord, 
       </defs>
     </svg>
     <div ref={layer} aria-hidden="true" className="statement-portal pointer-events-none absolute inset-0 z-20"
-      style={{ visibility: "hidden" }} />
+      style={{ visibility: "hidden" }}>
+      <div className="statement-portal__gradient absolute inset-0" />
+    </div>
   </>;
 }

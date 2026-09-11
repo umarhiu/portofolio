@@ -67,22 +67,38 @@ export const heroIntroBootstrap = String.raw`(() => {
     cleanups.push(() => target.removeEventListener(name, callback, options));
   };
   // Establish recovery BEFORE adding any hidden state.
-  timer = setTimeout(() => intro.finish('readiness-timeout'), 600);
+  timer = setTimeout(() => intro.finish('readiness-timeout'), 2500);
   intro.state = 'preparing';
   intro.reason = '';
+  // Lock before the first paint. All exit paths drain this cleanup,
+  // including resource failures, navigation and the independent watchdog.
+  const overflow = root.style.overflow;
+  const overscroll = root.style.overscrollBehavior;
+  root.style.overflow = 'hidden';
+  root.style.overscrollBehavior = 'none';
+  cleanups.push(() => {
+    root.style.overflow = overflow;
+    root.style.overscrollBehavior = overscroll;
+  });
+  const blockScroll = e => {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  };
   listen(window, 'scroll', () => {
-    if (!restartOnReload || scrollY > 0) intro.finish('scroll');
+    if (scrollY !== 0) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, { passive: true });
-  listen(window, 'wheel', () => intro.finish('scroll-input'), { passive: true });
+  listen(window, 'wheel', blockScroll, { passive: false, capture: true });
+  listen(window, 'touchmove', blockScroll, { passive: false, capture: true });
   listen(window, 'resize', () => {
     if (intro.state === 'entering') intro.finish('resize');
   }, { passive: true });
-  listen(window, 'touchstart', () => intro.finish('touch'), { passive: true });
   listen(window, 'pointermove', e => {
     intro.pointer = { clientX: e.clientX, clientY: e.clientY, pointerType: e.pointerType };
   }, { passive: true });
-  listen(document, 'keydown', () => intro.finish('keyboard'), true);
-  listen(document, 'focusin', () => intro.finish('focus'), true);
+  listen(document, 'keydown', e => {
+    const editing = e.target instanceof Element && e.target.closest('input, textarea, select, [contenteditable="true"]');
+    if (!editing && ['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '].includes(e.key)) blockScroll(e);
+  }, true);
   const activate = e => {
     if (e.target instanceof Element && e.target.closest('a, button, input, select, textarea, [tabindex]'))
       intro.finish('activation');

@@ -28,6 +28,16 @@ declare global {
   below, or it would cut the longest reveal short.
 */
 const IDENTITY = { appear: 0.3, hold: 0.3, dock: 0.55 };
+const GREETINGS = [
+  { text: "Hello", lang: "en", hold: .35 },
+  { text: "Halo", lang: "id", hold: .22 },
+  { text: "สวัสดี", lang: "th", hold: .26 },
+  { text: "こんにちは", lang: "ja", hold: .26 },
+  { text: "안녕하세요", lang: "ko", hold: .26 },
+  { text: "Bonjour", lang: "fr", hold: .22 },
+  { text: "Hola", lang: "es", hold: .3 },
+];
+const PRELOADER_DURATION = GREETINGS.reduce((sum, word) => sum + word.hold, 0) + .75;
 
 type Group = { name: string; from: string; to?: string; elementStagger?: number };
 type Beat = {
@@ -122,9 +132,28 @@ export function useHeroEntrance() {
         const x = viewport.left + viewport.width / 2 - (label.left + label.width / 2);
         const y = window.innerHeight / 2 - (label.top + label.height / 2);
         const centered = `translate(${x}px, ${y}px) scale(1.12)`;
-        if (!intro!.start(measureDuration())) return;
+        if (!intro!.start(measureDuration() + PRELOADER_DURATION * 1000)) return;
         owned = true;
         intro!.cancel = () => controls?.stop();
+        const preloader = document.querySelector<HTMLElement>("[data-greeting-preloader]");
+        const greeting = document.querySelector<HTMLElement>("[data-greeting-word]");
+        const curve = document.querySelector<SVGPathElement>("[data-greeting-curve]");
+        if (preloader && greeting && curve) {
+          for (const word of GREETINGS) {
+            greeting.textContent = word.text;
+            greeting.lang = word.lang;
+            controls = animate(0, 1, { duration: word.hold });
+            await controls;
+            if (!running()) return;
+          }
+          const exit = animate(preloader, { transform: ["translateY(0%)", "translateY(-120%)"] }, { duration: .75, ease: [0.77, 0, 0.175, 1] });
+          const flatten = animate(curve, { d: ["M0 0 H1000 V0 Q500 280 0 0 Z", "M0 0 H1000 V0 Q500 0 0 0 Z"] }, { duration: .75, ease: EASE_OUT });
+          intro!.cancel = () => { exit.stop(); flatten.stop(); };
+          await Promise.all([exit, flatten]);
+          if (!running()) return;
+          preloader.style.visibility = "hidden";
+          intro!.cancel = () => controls?.stop();
+        }
         controls = animate(identity, {
           opacity: [0, 1],
           transform: [`translate(${x}px, ${y + 6}px) scale(1.12)`, centered],

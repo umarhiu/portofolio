@@ -2,6 +2,7 @@ import { hero } from "@/lib/content";
 import { HeroPlay } from "@/components/hero/HeroPlay";
 import { HeroStudio } from "@/components/hero/HeroStudio";
 import { TextReveal } from "@/components/ui/text-reveal-animation";
+import { MagneticButton } from "@/components/ui/MagneticButton";
 
 /*
   "A little play, serious craft": one centered editorial composition on a
@@ -47,13 +48,17 @@ export function HeroStatic() {
         <div className="mt-7 flex flex-wrap items-center justify-center gap-4 sm:mt-8">
           {/* Equal widths when the pair stacks on narrow screens; natural
               widths side by side from sm up. */}
-          <a
+          <div
             data-hero-enter="primary"
-            href={hero.ctas.primary.href}
-            className="inline-flex min-h-11 w-full max-w-[280px] items-center justify-center bg-violet px-6 py-3 font-mono text-xs uppercase tracking-[0.18em] text-on-violet transition-opacity duration-200 hover:opacity-85 sm:w-auto sm:max-w-none"
+            className="w-full max-w-[280px] sm:w-auto sm:max-w-none"
           >
-            {hero.ctas.primary.label}
-          </a>
+            <MagneticButton
+              href={hero.ctas.primary.href}
+              className="cta inline-flex min-h-11 w-full items-center justify-center bg-violet px-6 py-3 font-mono text-xs uppercase tracking-[0.18em] text-on-violet"
+            >
+              {hero.ctas.primary.label}
+            </MagneticButton>
+          </div>
           <a
             data-hero-enter="secondary"
             href={hero.ctas.secondary.href}

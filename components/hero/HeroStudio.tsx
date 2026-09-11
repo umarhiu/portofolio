@@ -35,16 +35,18 @@ function StudioCard({ name, source, angle, depth }: typeof studies[number]) {
       if (!pointer || (window.__heroIntro && window.__heroIntro.state !== "ready")) return;
       // Measure the fixed layout slot, never the moving image: no feedback loop.
       const box = slot.current!.getBoundingClientRect();
-      const dx = pointer.clientX - (box.left + box.width / 2);
-      const dy = pointer.clientY - (box.top + box.height / 2);
+      // Share the controller's hero-wide coordinate space. Each card retains
+      // its depth, but no longer loses influence far from its own position.
+      const heroBox = hero.getBoundingClientRect();
+      const nx = Math.max(-1, Math.min(1, 2 * (pointer.clientX - heroBox.left) / Math.max(1, heroBox.width) - 1));
+      const ny = Math.max(-1, Math.min(1, 2 * (pointer.clientY - heroBox.top) / Math.max(1, heroBox.height) - 1));
       // Use the stable slot for hover too, so enlargement cannot retrigger itself.
       // Decorative cards remain click-through beneath the hero's controls.
       slot.current!.toggleAttribute("data-hovered",
         pointer.clientX >= box.left && pointer.clientX <= box.right &&
         pointer.clientY >= box.top && pointer.clientY <= box.bottom);
-      const proximity = Math.max(0, 1 - Math.hypot(dx, dy) / 700);
-      x.set(Math.max(-32, Math.min(32, dx * 0.1)) * depth * proximity);
-      y.set(Math.max(-32, Math.min(32, dy * 0.1)) * depth * proximity);
+      x.set(nx * 32 * depth);
+      y.set(ny * 24 * depth);
     };
     const move = (event: Event) => { pointer = event as PointerEvent; update(); };
     const visibility = () => { if (document.hidden) reset(); };

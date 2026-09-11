@@ -1,4 +1,5 @@
 import { WorkRail } from "@/components/work/WorkRail";
+import { WorkScrollCue } from "@/components/work/WorkScrollCue";
 
 /*
   The violet chapter: Selected Work entered through a portal.
@@ -26,6 +27,7 @@ import { WorkRail } from "@/components/work/WorkRail";
 export function WorkChapter() {
   return (
     <div className="work-chapter">
+      <WorkScrollCue />
       <WorkRail />
     </div>
   );

@@ -1,5 +1,6 @@
 import { HeroStatic } from "@/components/home/HeroStatic";
 import { HeroTransition } from "@/components/home/HeroTransition";
+import { GreetingPreloader } from "@/components/hero/GreetingPreloader";
 
 /*
   Server wrapper. The hero is one static-first composition (HeroStatic) whose
@@ -10,8 +11,8 @@ import { HeroTransition } from "@/components/home/HeroTransition";
 */
 export function Hero() {
   return (
-    <HeroTransition>
+    <><GreetingPreloader /><HeroTransition>
       <HeroStatic />
-    </HeroTransition>
+    </HeroTransition></>
   );
 }

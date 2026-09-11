@@ -55,7 +55,7 @@
   /* The work chapter is a full-bleed violet field carrying white ink at
      5.62:1, with the cards staying black objects on it at 3.74:1, which
      clears the 3:1 non-text threshold for a surface boundary. */
-  --color-chapter-field: var(--color-violet);
+  --color-chapter-field: #3d176b;
   --color-chapter-deep: var(--color-violet-deep);
 
   --font-display: var(--font-archivo-expanded), "Arial Black", system-ui, sans-serif;
@@ -462,6 +462,14 @@ html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] .site-nav__togg
 
 /* Opt-in pre-paint enhancement only. No script / bypass / timeout = visible.
    Only entrance-owned elements are faded; never the 3D rig or scroll mask. */
+.greeting-preloader { display: none; }
+html[data-hero-intro] .greeting-preloader {
+  display: grid; place-items: center; position: fixed; inset: 0; z-index: 9999;
+  background: var(--color-violet); color: #fff; pointer-events: none;
+}
+.greeting-preloader__label { display: flex; align-items: center; gap: 18px; font-family: system-ui, "Noto Sans Thai", "Noto Sans JP", "Noto Sans KR", sans-serif; font-size: clamp(32px, 5vw, 64px); line-height: 1.5; }
+.greeting-preloader__curve { position: absolute; top: calc(100% - 1px); left: 0; width: 100%; height: 160px; fill: var(--color-violet); }
+@media (prefers-reduced-motion: reduce) { html[data-hero-intro] .greeting-preloader { display: none; } }
 html[data-hero-intro] [data-hero-enter] {
   opacity: 0;
   pointer-events: none;
@@ -1333,11 +1341,35 @@ html[data-cursor-surface="violet"] .fcur-ring {
   color: var(--color-on-violet);
   background: var(--color-chapter-field);
 }
-.work-chapter { background: var(--color-chapter-field); color: var(--color-on-violet); }
+.work-chapter { position: relative; background: var(--color-chapter-field); color: var(--color-on-violet); }
+.work-scroll-cue { position: fixed; z-index: 2; inset: 0; color: var(--color-lime); pointer-events: none; opacity: 0; text-align: center; overflow: hidden; }
+.work-scroll-cue span { position: absolute; bottom: max(40px, env(safe-area-inset-bottom)); left: 0; width: 100%; font: 11px var(--font-mono); text-transform: uppercase; letter-spacing: .16em; animation: scroll-cue-nudge 1.8s cubic-bezier(0.77, 0, 0.175, 1) infinite; }
+@keyframes scroll-cue-nudge {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(7px); }
+}
+.work-scroll-cue svg { display: var(--cue-wave-display, block); width: 100%; height: 85%; }
+@media(prefers-reduced-motion: reduce) { .work-scroll-cue { position: relative; inset: auto; height: 64px; } .work-scroll-cue span { bottom: 16px; opacity: 1 !important; animation: none; } }
 /* The highlight sits on the black page, where violet is 3.74:1 and under the
    body floor. This is the reason lime is the accent and violet is not. */
+.statement {
+  /* Glyph Portal's layered light pattern, expressed in our violet palette. */
+  --statement-text-gradient:
+    radial-gradient(circle at 18% 8%, color-mix(in srgb, var(--color-chapter-field) 65%, white) 0%, transparent 34%),
+    radial-gradient(circle at 82% 20%, rgb(255 255 255 / .12), transparent 28%),
+    radial-gradient(circle at 48% 78%, color-mix(in srgb, var(--color-chapter-field) 50%, transparent), transparent 44%),
+    linear-gradient(135deg, color-mix(in srgb, var(--color-chapter-field) 72%, black) 0%, var(--color-chapter-field) 48%, color-mix(in srgb, var(--color-chapter-field) 55%, black) 100%);
+}
 .statement-highlight {
-  color: var(--color-accent);
+  color: transparent;
+  background-image: var(--statement-text-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+.statement-highlight[data-portal-active="true"] { background-image: none; }
+.statement-portal__gradient {
+  background: var(--statement-text-gradient);
+  opacity: var(--statement-gradient-opacity, 1);
 }
 .statement-portal, .work-chapter, .work-chapter .work-rail {
   background-color: var(--color-chapter-field);
@@ -1434,3 +1466,33 @@ html[data-cursor-surface="violet"] .fcur-ring {
 .work-rail--static .work-rail__list::-webkit-scrollbar {
   display: none;
 }
+
+/* Center-weighted project gallery. Padding centers the first and last cards;
+   scale is decorative, so it never changes the measured scroll distance. */
+.work-gallery {
+  --gallery-card: min(68vw, 1000px, calc((100dvh - 160px) * 1.4));
+  --gallery-gap: 24px;
+  color: white;
+}
+.work-gallery__stage { position: sticky; top: 0; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; justify-content: center; padding-block: 48px; }
+.work-gallery__heading { padding: clamp(64px, 10vh, 120px) 24px 24px; text-align: center; color: white; }
+.work-gallery__heading h2 { font-size: clamp(36px, 4.5vw, 64px); line-height: 1.1; }
+.work-gallery__heading p { max-width: 680px; margin: 24px auto 0; font-size: clamp(17px, 1.5vw, 21px); line-height: 1.6; color: rgb(255 255 255 / .85); }
+.work-gallery__list { display: flex; align-items: center; gap: var(--gallery-gap); width: max-content; padding: 12px max(0px, calc((100vw - var(--gallery-card)) / 2)); list-style: none; }
+.work-gallery__card { flex: 0 0 var(--gallery-card); width: var(--gallery-card); transform-origin: center; }
+.work-gallery__frame { color: var(--color-on-violet); }
+.work-gallery__frame > img { display: block; width: 100%; height: auto; aspect-ratio: 1.5; object-fit: cover; border-radius: 14px; border: 1px solid rgb(255 255 255 / .2); }
+.work-gallery__caption { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 76px; padding: 22px 0 8px; }
+.work-gallery__name { display: flex; align-items: baseline; gap: 16px; }
+.work-gallery__number { font: 11px var(--font-mono); color: var(--color-lime); letter-spacing: .08em; }
+.work-gallery__caption h3 { font-family: var(--font-display); font-size: clamp(16px, 1.6vw, 24px); font-weight: 700; line-height: 1.2; }
+.work-gallery__caption ul { display: flex; gap: 10px; flex-wrap: wrap; list-style: none; }
+.work-gallery__caption li { color: rgb(255 255 255 / .8); font: 10px var(--font-mono); letter-spacing: .05em; }
+.work-gallery__caption li + li::before { content: '/'; margin-right: 10px; opacity: .5; }
+.work-gallery--native { --gallery-card: min(82vw, 720px); padding-block: 64px; }
+.work-gallery--native .work-gallery__list { width: 100%; overflow-x: auto; margin-top: 28px; scrollbar-width: thin; }
+@media(max-width: 640px) {
+  .work-gallery__caption { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .work-gallery__frame > img { aspect-ratio: 1; }
+}
+@media(prefers-reduced-motion: reduce) { .work-gallery__card { transform: none !important; } }
