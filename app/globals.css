@@ -290,9 +290,11 @@ html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] .site-nav__togg
    6.6 percent at 3840px.
 
    320px is not an arbitrary ceiling. The sources are 640px wide and are
-   served as plain <img> with no srcset, so 320 CSS px is exactly 2x and the
-   last size that does not upsample on a retina display. Going beyond it
-   needs regenerated assets, not a CSS edit.
+   served at one size, with no width descriptors: the <picture> in
+   HeroStudio.tsx carries a single <source> that gates on viewport width, not
+   on resolution. So 320 CSS px is exactly 2x and the last size that does not
+   upsample on a retina display. Going beyond it needs regenerated assets,
+   not a CSS edit.
 
    --studio-rail is the gap from the hero edge to the content column, which is
    max-w-[1200px] centred. Anchoring the cards to that column instead of to
@@ -366,85 +368,31 @@ html:not([data-nav-theme]) .site-nav[data-initial-theme="light"] .site-nav__togg
 .hero-studio__slot--detail .hero-studio__card { aspect-ratio: 0.78; }
 .hero-studio__slot--detail img { height: 100%; object-fit: cover; object-position: center; }
 .hero-studio__slot--architecture .hero-studio__card { box-shadow: 0 16px 26px -12px rgb(0 0 0 / 17%); }
-/* Below the desktop gate all five cards move to the bottom edge and scatter,
-   instead of two of them sitting in the top corners and three being hidden.
-   Showing the other three costs nothing: every one of the five <img> tags
-   already renders and downloads at every width, and display:none never saved
-   the bytes.
+/* Below the desktop gate the studio is not shown at all.
 
-   The band is a function of viewport HEIGHT, not width. The shell centres its
-   content with justify-center, so the free space below the CTA row is
-   (100dvh - 657px) / 2 plus the 32px of pb-8. Measured: 32px at 640 tall,
-   73px at 740, 125px at 844, 169px at 932. At 640 the content alone is
-   already taller than the viewport, so 32px of bottom padding is the whole
-   budget and the unit floors out there.
+   It used to cluster all five cards along the bottom edge. That worked, and
+   the geometry was sound once each card's rotated footprint was budgeted, but
+   the composition still has to fit in the leftover height under the CTA row,
+   which measures 124px at 844 tall and 15px at 640. At that size five device
+   mockups stop reading as work and become a strip of thumbnails competing with
+   the headline on the screen that can least afford it, so the hero drops them
+   and keeps the type.
 
-   So each card bleeds off the bottom by a set fraction of itself and only a
-   sliver stays in the band. .hero-studio is overflow: clip and is inset:0 of
-   the shell, so the overhang is cut exactly at the shell's bottom edge
-   (verified), which is what makes the bleed read as deliberate rather than as
-   a card falling out of the layout. The bleed fractions are chosen so the
-   tallest visible sliver is under 30px even at the 52px floor, which keeps
-   every card clear of the CTA buttons on the shortest phone.
+   The five sources are also NOT fetched below this width. display:none does
+   not stop an eager <img> downloading, so HeroStudio.tsx pairs this rule with
+   a <picture> whose <source> gates on viewport width; without that a phone
+   still pulls 409 kB of mockups it will never paint.
 
-   Widths, bleeds and the JS rotations (-6, -13, -8, 8, 17 degrees) are all
-   different per card on purpose: the ask was a scattered arrangement, not a
-   row. */
-@media (max-width: 1023px) {
-  .hero-studio {
-    /* Bounded on BOTH axes. Height alone put a 150px card on a 390px phone
-       (38 percent of the screen), because a tall narrow phone has a generous
-       band but no width to spend it on. 21vw keeps the largest card just
-       inside a fifth of a narrow screen; the height term still governs on
-       short phones, where the band runs out first. */
-    --studio-unit: clamp(52px, min(56dvh - 320px, 21vw), 150px);
-
-    /* The free space below the CTA row, derived rather than guessed. The
-       shell centres its content, so the leftover is (100dvh - 657px) / 2,
-       plus the 32px of pb-8. Measured against the live page: 32px at 640
-       tall, 73px at 740, 125px at 844, 169px at 932. The 32px floor is the
-       padding alone, which is all there is at 640 where the content is
-       already taller than the viewport. The 210px ceiling stops a tall
-       tablet lifting the cards up into the buttons. */
-    --studio-band: clamp(32px, calc(50dvh - 296px), 210px);
-  }
-  /* Each card is placed by how much of the BAND it occupies, not by a fixed
-     bleed. Its top edge sits --studio-band * k above the shell bottom, and k
-     is under 1 for all five, so no card can ever reach the CTA row whatever
-     the height. On a tall phone the band is deeper than the cards, so they
-     sit fully visible at five different heights; on a 640px phone the band
-     collapses to 32px and the same rule bleeds them off the bottom edge
-     instead, where overflow: clip cuts them cleanly. One expression, and the
-     scatter survives both ends. */
-  .hero-studio__slot { top: auto; }
-  .hero-studio__slot--architecture {
-    width: calc(var(--studio-unit) * 0.58);
-    left: -3%;
-    bottom: calc(var(--studio-band) * 0.62 - var(--studio-unit) * 0.58);
-  }
-  .hero-studio__slot--metal {
-    width: calc(var(--studio-unit) * 1);
-    left: 9%;
-    bottom: calc(var(--studio-band) * 0.9 - var(--studio-unit) * 1);
-  }
-  .hero-studio__slot--paper {
-    width: calc(var(--studio-unit) * 0.84);
-    left: 37%;
-    bottom: calc(var(--studio-band) * 0.78 - var(--studio-unit) * 0.84);
-  }
-  .hero-studio__slot--acrylic {
-    width: calc(var(--studio-unit) * 0.66);
-    right: 19%;
-    bottom: calc(var(--studio-band) * 0.86 - var(--studio-unit) * 0.66);
-  }
-  /* detail is the one portrait card (aspect-ratio 0.78), so its height is
-     1.28 times its width and the subtraction has to use that, not the width. */
-  .hero-studio__slot--detail {
-    width: calc(var(--studio-unit) * 0.6);
-    right: -3%;
-    bottom: calc(var(--studio-band) * 0.7 - var(--studio-unit) * 0.77);
-  }
-  .hero-studio__card { border-radius: 8px; }
+   Hidden by default and shown by the SAME query the <source> uses, rather
+   than hidden by a max-width twin. (max-width: 1023px) and
+   (min-width: 1024px) are not complements: a viewport at 1023.5px, which
+   browser zoom, a fractional device pixel ratio or Windows display scaling
+   all produce, matches neither, and the studio then painted five blank white
+   cards because every <source> had missed. Written this way the two gates are
+   the same string and cannot drift apart. */
+.hero-studio { display: none; }
+@media (min-width: 1024px) {
+  .hero-studio { display: block; }
 }
 /* A short laptop has no vertical room for the full composition, so the unit
    shrinks rather than each slot being hand-set in px as it was before. This

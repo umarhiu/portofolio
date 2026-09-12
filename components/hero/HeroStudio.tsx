@@ -3,6 +3,10 @@
 import { useEffect, useRef } from "react";
 import { motion, useSpring, useTransform } from "motion/react";
 
+// 1x1 transparent GIF. Stands in below 1024px, where <source> does not match
+// and the studio is hidden, so no mockup is requested on a phone.
+const BLANK = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+
 const studies = [
   // Generated device mockups featuring the user's project designs.
   { name: "architecture", source: "reusely-tablet-mockup", angle: -6, depth: 0.4 },
@@ -70,9 +74,20 @@ function StudioCard({ name, source, angle, depth }: typeof studies[number]) {
     <div ref={slot} className={`hero-studio__slot hero-studio__slot--${name}`}>
       <div data-hero-enter="studio">
         <motion.div className="hero-studio__card" style={{ transform }}>
-          {/* Decorative raster; fixed dimensions prevent layout shifts. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={`/images/hero-studio/${source}.webp`} width={640} height={source === "volunteer-mobile-mockup" ? 960 : 640} alt="" draggable={false} decoding="async" />
+          {/* Decorative raster; fixed dimensions prevent layout shifts.
+
+              The <source> gate matches the .hero-studio display rule in
+              globals.css. Below 1024px the studio is not painted, and an eager
+              <img> would still download 409 kB of mockups for a phone that
+              never shows them, because display:none does not cancel a fetch.
+              The blank fallback keeps the element valid and costs no request.
+              Loading stays eager on desktop, where these are part of the first
+              impression. Change this query only together with that rule. */}
+          <picture>
+            <source media="(min-width: 1024px)" srcSet={`/images/hero-studio/${source}.webp`} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={BLANK} width={640} height={source === "volunteer-mobile-mockup" ? 960 : 640} alt="" draggable={false} decoding="async" />
+          </picture>
         </motion.div>
       </div>
     </div>
