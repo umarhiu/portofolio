@@ -1415,10 +1415,25 @@ html[data-cursor-surface="violet"] .fcur-ring {
   display: none;
 }
 
-/* Center-weighted project gallery. Padding centers the first and last cards;
-   scale is decorative, so it never changes the measured scroll distance. */
+/* Center-weighted project gallery. Each frame takes its proportion from its
+   own cover, so the cards share a height and differ in width; WorkRail sets
+   the padding that centres the first and last of them, and measures the travel
+   between their centres. The active card's scale is decorative and is read off
+   layout values, so it never changes the measured scroll distance. */
 .work-gallery {
-  --gallery-card: min(68vw, 1000px, calc((100dvh - 160px) * 1.4));
+  /* The media is sized by HEIGHT now, and each cover's width follows from its
+     own ratio, so there is no fixed card width to set. What the row can
+     give the media is the stage height less the stage's own 96px of padding,
+     the 76px caption under it, and the frame's padding top and bottom. The
+     40px is breathing room so the tallest card does not touch the stage edge.
+
+     627px is half of 1254, the natural height of the four square covers, so
+     they draw exactly native on a 2x screen. The portrait cover (1536 tall)
+     has headroom at 0.82x. banding-laptop is the one that still stretches, to
+     1.22x, because its source is only 1024 tall; that is a source limit, and
+     raising this cap only helps once that cover is re-rendered taller. */
+  --gallery-pad: clamp(10px, 0.9vw, 20px);
+  --gallery-media: min(627px, calc(100dvh - 96px - 76px - 40px - 2 * var(--gallery-pad)));
   --gallery-gap: 24px;
   color: white;
 }
@@ -1426,10 +1441,51 @@ html[data-cursor-surface="violet"] .fcur-ring {
 .work-gallery__heading { padding: clamp(64px, 10vh, 120px) 24px 24px; text-align: center; color: white; }
 .work-gallery__heading h2 { font-size: clamp(36px, 4.5vw, 64px); line-height: 1.1; }
 .work-gallery__heading p { max-width: 680px; margin: 24px auto 0; font-size: clamp(17px, 1.5vw, 21px); line-height: 1.6; color: rgb(255 255 255 / .85); }
-.work-gallery__list { display: flex; align-items: center; gap: var(--gallery-gap); width: max-content; padding: 12px max(0px, calc((100vw - var(--gallery-card)) / 2)); list-style: none; }
-.work-gallery__card { flex: 0 0 var(--gallery-card); width: var(--gallery-card); transform-origin: center; }
+/* The inline padding that centres the first and last card is set by WorkRail,
+   because with cards of different widths the two ends need different values
+   and CSS cannot know either one. */
+.work-gallery__list { display: flex; align-items: center; gap: var(--gallery-gap); width: max-content; padding-block: 12px; list-style: none; }
+.work-gallery__card { flex: 0 0 auto; transform-origin: center; }
 .work-gallery__frame { color: var(--color-on-violet); }
-.work-gallery__frame > img { display: block; width: 100%; height: auto; aspect-ratio: 1.5; object-fit: cover; border-radius: 14px; border: 1px solid rgb(255 255 255 / .2); }
+/* The frame, sized by the cover rather than the other way round.
+
+   Four of the six covers are square (1254x1254), one is 3:2 (1536x1024) and
+   one is 2:3 (1024x1536). A frame of any fixed ratio leaves a mat on two sides
+   of the odd ones out, which is what made the earlier version read as a
+   letterbox instead of a frame. Here the image sets the proportion and the
+   padding is even on all four sides, so every card is the same object at a
+   different size.
+
+   White at .92 over the violet field composites to about rgb(240 236 243):
+   near-white carrying a little of the field, so it stays an alpha tier of a
+   palette colour rather than a fifth one. The lift is a soft shadow plus a
+   one-pixel inner highlight rather than a hard border, which is what keeps it
+   subtle against the violet. */
+.work-gallery__plate {
+  display: block;
+  width: max-content;
+  padding: var(--gallery-pad);
+  background: rgb(255 255 255 / .92);
+  border-radius: calc(var(--gallery-pad) + 12px);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / .55),
+    0 2px 6px rgb(0 0 0 / .16),
+    0 26px 56px -22px rgb(0 0 0 / .5);
+}
+/* max-height drives the size and max-width is only a guard for a very wide
+   cover on a narrow window; width and height stay auto so the ratio is the
+   image's own. Every source is larger than the cap, so this only ever scales
+   DOWN, which is what keeps the covers at native resolution. Explicit color so
+   alt text stays legible on the frame if a cover fails to load. */
+.work-gallery__plate img {
+  display: block;
+  max-height: var(--gallery-media);
+  max-width: 78vw;
+  width: auto;
+  height: auto;
+  border-radius: 12px;
+  color: var(--color-void);
+}
 .work-gallery__caption { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 76px; padding: 22px 0 8px; }
 .work-gallery__name { display: flex; align-items: baseline; gap: 16px; }
 .work-gallery__number { font: 11px var(--font-mono); color: var(--color-lime); letter-spacing: .08em; }
@@ -1437,10 +1493,16 @@ html[data-cursor-surface="violet"] .fcur-ring {
 .work-gallery__caption ul { display: flex; gap: 10px; flex-wrap: wrap; list-style: none; }
 .work-gallery__caption li { color: rgb(255 255 255 / .8); font: 10px var(--font-mono); letter-spacing: .05em; }
 .work-gallery__caption li + li::before { content: '/'; margin-right: 10px; opacity: .5; }
-.work-gallery--native { --gallery-card: min(82vw, 720px); padding-block: 64px; }
-.work-gallery--native .work-gallery__list { width: 100%; overflow-x: auto; margin-top: 28px; scrollbar-width: thin; }
+/* Without the pinned stage there is no row height to size from, so the native
+   scroller goes back to a width budget and the frame's proportion still comes
+   from the cover. */
+.work-gallery--native { --gallery-media: none; padding-block: 64px; }
+.work-gallery--native .work-gallery__list { width: 100%; overflow-x: auto; margin-top: 28px; scrollbar-width: thin; padding-inline: 0; }
+.work-gallery--native .work-gallery__card { width: min(82vw, 560px); }
+.work-gallery--native .work-gallery__plate { width: auto; }
+.work-gallery--native .work-gallery__plate img { max-height: none; max-width: 100%; width: 100%; }
 @media(max-width: 640px) {
   .work-gallery__caption { flex-direction: column; align-items: flex-start; gap: 10px; }
-  .work-gallery__frame > img { aspect-ratio: 1; }
+  .work-gallery__plate { padding: 8px; border-radius: 16px; }
 }
 @media(prefers-reduced-motion: reduce) { .work-gallery__card { transform: none !important; } }
